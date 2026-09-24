@@ -20,6 +20,8 @@ trabajo. Si hay mucho audio, invocar este script varias veces con lotes de
 2 a 3 minutos cada uno; los resultados se van fusionando en el mismo JSON.
 """
 
+from __future__ import annotations  # anotaciones perezosas: corre en Python 3.8+
+
 import argparse
 import glob as globmod
 import json
