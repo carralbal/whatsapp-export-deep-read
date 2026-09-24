@@ -113,6 +113,20 @@ Si el bloque 4 queda vacío, probablemente falta leer algo.
 Con qué se transcribieron los audios y qué correcciones se aplicaron; cómo se
 leyeron los PDF (texto o rasterizado); qué imágenes se inspeccionaron; qué quedó
 fuera de alcance y por qué.
+
+Listar las correcciones recurrentes. Errores tipicos del motor de transcripcion,
+verificados contra audio real en español rioplatense:
+
+| El motor escribe | Casi siempre es |
+|---|---|
+| idea | **IA** |
+| Mercules, Mercoles | miercoles |
+| nombres propios deformados | revisarlos uno por uno contra el chat |
+| siglas del rubro | reconstruirlas desde el contexto |
+
+El caso de **IA -> idea** es el mas frecuente en conversaciones sobre
+tecnologia, y el mas facil de pasar por alto porque la frase sigue teniendo
+sentido gramatical. Revisarlo siempre.
 ```
 
 ---
