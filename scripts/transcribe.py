@@ -62,7 +62,8 @@ def duration(path):
     try:
         out = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-             "-of", "csv=p=0", path], capture_output=True, text=True)
+             "-of", "csv=p=0", path], capture_output=True, text=True,
+            encoding="utf-8", errors="replace")
         return round(float(out.stdout.strip()), 1)
     except Exception:
         return None

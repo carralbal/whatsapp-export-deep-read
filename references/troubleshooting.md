@@ -117,3 +117,35 @@ head -c 200 _chat.txt | xxd | head -12
 ```
 
 Ahi se ven los caracteres invisibles que en pantalla parecen un espacio comun.
+
+---
+
+## Windows
+
+El instalador y los scripts son Python puro y estan escritos para funcionar en
+Windows, pero **nadie lo verifico todavia en Windows real**. Si lo corres ahi y
+algo falla, abri un issue: es informacion util.
+
+Lo que conviene tener en cuenta:
+
+**Usa `python`, no `python3`.** En Windows el comando suele ser `python`.
+
+**ffmpeg tiene que estar en el PATH.** `winget install Gyan.FFmpeg` lo resuelve.
+Si lo bajaste a mano, agrega su carpeta `bin` al PATH y abri una terminal nueva.
+
+**Rutas largas.** Windows corta las rutas a 260 caracteres por defecto. Un
+export de WhatsApp tiene nombres de archivo largos, y si ademas lo descomprimis
+dentro de una carpeta anidada podes pasarte. Si aparecen errores de "ruta
+demasiado larga", descomprimi en algo corto como `C:\wa\` o habilita rutas
+largas en Windows.
+
+**Los comandos del README que usan `mkdir -p` y `cp -r` son de macOS y Linux.**
+En PowerShell el equivalente es:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$HOME\.claude\skills"
+Copy-Item -Recurse whatsapp-export-deep-read "$HOME\.claude\skills\"
+```
+
+**`CREAR_REPO.sh` es un script de bash** y no corre en Windows sin WSL o Git
+Bash. Solo hace falta para publicar el repo, no para usar el skill.
