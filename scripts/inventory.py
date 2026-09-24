@@ -82,7 +82,8 @@ def probe_duration(path):
         out = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
              "-of", "csv=p=0", path],
-            capture_output=True, text=True, timeout=60)
+            capture_output=True, text=True, timeout=60,
+            encoding="utf-8", errors="replace")
         return round(float(out.stdout.strip()), 1)
     except Exception:
         return None
@@ -91,7 +92,8 @@ def probe_duration(path):
 def pdf_pages(path):
     try:
         out = subprocess.run(["pdfinfo", path], capture_output=True,
-                             text=True, timeout=60)
+                             text=True, timeout=60,
+                             encoding="utf-8", errors="replace")
         for line in out.stdout.splitlines():
             if line.startswith("Pages:"):
                 return int(line.split()[-1])

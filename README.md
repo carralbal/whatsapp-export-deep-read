@@ -49,8 +49,11 @@ Y un recuento de cobertura, que es la prueba de que se leyó el 100%:
   `pdftoppm`)
 - ~1 GB de disco para el modelo de transcripción (`small`), o ~110 MB (`tiny`)
 
-**Plataformas:** Windows, macOS y Linux. El instalador es Python puro: no
-necesita bash ni WSL.
+**Plataformas:** macOS y Linux, verificados. Windows deberia funcionar —el
+instalador es Python puro, no necesita bash ni WSL— pero **todavia no lo probo
+nadie en Windows real**. Si sos el primero, hay notas en
+[`references/troubleshooting.md`](references/troubleshooting.md) y se agradece
+el reporte.
 
 ```bash
 # macOS
