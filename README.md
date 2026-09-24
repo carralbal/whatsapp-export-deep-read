@@ -183,6 +183,54 @@ Detecta automáticamente cuál de los dos formatos de chat es.
 
 ---
 
+## Preguntas frecuentes
+
+### ¿Tengo que usar la terminal?
+
+No. Con Claude Code o Cowork le pedís *"instalá el motor de transcripción de
+este skill"* y después *"leé este export de WhatsApp"*, y el asistente corre
+todo. Los comandos de este README son la vía manual, no la única.
+
+Lo que hace falta no es una terminal: es **un asistente que pueda ejecutar
+cosas en tu máquina**.
+
+### ¿Funciona con ChatGPT?
+
+Depende de cuál.
+
+**ChatGPT web o celular: no.** No puede leer archivos de tu disco. Tendrías que
+subir el export entero, que choca con el límite de tamaño por archivo y además
+manda toda la conversación del grupo a sus servidores — justo lo que este skill
+evita.
+
+**ChatGPT Work en la app de escritorio: en teoría sí.** Esa versión accede a
+carpetas locales con tu permiso y corre programas en tu máquina. **No está
+verificado**: si lo probás, contá cómo te fue.
+
+**Cualquier asistente, sin instalar nada: parcialmente.** Pegá
+[`INSTRUCCIONES.md`](INSTRUCCIONES.md) como instrucción de tu proyecto. Funciona
+con el texto, las imágenes y los documentos. Los audios y los videos quedan
+afuera, porque ningún asistente escucha un `.opus` por su cuenta.
+
+### ¿Los audios salen bien en español rioplatense?
+
+Bien, no perfecto. Habla espontánea con muletillas sale legible de punta a
+punta. Falla con nombres propios, siglas y jerga — y el error más frecuente en
+conversaciones sobre tecnología es **"IA" transcripto como "idea"**, difícil de
+notar porque la frase sigue teniendo sentido.
+
+Por eso el método separa transcribir de interpretar: el motor transcribe, el
+asistente corrige con el contexto y **deja constancia de cada corrección**.
+
+### ¿De verdad no sube nada a ningún lado?
+
+El modelo de transcripción corre en tu máquina: **el audio no sale de ahí.** Lo
+que sí viaja es el texto que el asistente lee, que queda en el historial de tu
+conversación — igual que con cualquier archivo que le pases. Eso vale tanto para
+Claude como para ChatGPT.
+
+---
+
 ## Licencia
 
 MIT. Usalo, cambialo, publicalo. Si te sirve, contame.
