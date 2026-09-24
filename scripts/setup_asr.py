@@ -16,6 +16,8 @@ Donde queda el modelo:
     Por defecto ASR_HOME = ~/.whatsapp-deep-read
 """
 
+from __future__ import annotations  # anotaciones perezosas: corre en Python 3.8+
+
 import argparse
 import os
 import shutil
@@ -32,6 +34,14 @@ URL = ("https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/"
        "sherpa-onnx-whisper-{m}.tar.bz2")
 
 ES = sys.platform == "win32"
+
+
+if sys.version_info < (3, 8):
+    sys.exit("ERROR: este script necesita Python 3.8 o mas nuevo.\n"
+             "Tenes " + sys.version.split()[0] + " en " + sys.executable + ".\n"
+             "  macOS:    brew install python\n"
+             "  Windows:  winget install Python.Python.3.12\n"
+             "  Linux:    sudo apt install python3")
 
 
 def home() -> Path:
@@ -58,7 +68,7 @@ def instrucciones_ffmpeg() -> str:
     return "  Linux:    sudo apt install ffmpeg     # o el gestor de tu distro"
 
 
-def buscar_ffmpeg() -> str | None:
+def buscar_ffmpeg():
     """ffmpeg del sistema, o el que trae el paquete imageio-ffmpeg si esta."""
     ruta = shutil.which("ffmpeg")
     if ruta:

@@ -17,6 +17,8 @@ Produce:
   - huecos de conversacion mayores a 14 dias
 """
 
+from __future__ import annotations  # anotaciones perezosas: corre en Python 3.8+
+
 import argparse
 import hashlib
 import json

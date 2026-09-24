@@ -41,7 +41,7 @@ Y un recuento de cobertura, que es la prueba de que se leyó el 100%:
 
 ## Requisitos
 
-- **Python 3.9 o más nuevo** y **ffmpeg**
+- **Python 3.8 o más nuevo** y **ffmpeg**
 - Un asistente que pueda **ejecutar scripts y leer archivos de una carpeta en tu
   máquina**: Claude Code, Cowork, o cualquier otro con esa capacidad. Pegando
   esto en un chat web no funciona: necesita correr los scripts.
