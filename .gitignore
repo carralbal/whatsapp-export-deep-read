@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+inventario.json
+transcripciones.json
+wav/
+frames/
+png/
+.DS_Store
