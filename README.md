@@ -1,15 +1,25 @@
 # whatsapp-export-deep-read
 
-Un skill para Claude que lee **todo** un export de WhatsApp —no solo el texto— y lo
-convierte en un único archivo Markdown que sirve como memoria permanente del proyecto.
+Lee **todo** un export de WhatsApp —no solo el texto— y lo convierte en un único
+archivo Markdown que sirve como memoria permanente de esa conversación.
 
 Transcribe los audios. Mira los videos. Lee los PDF, los Word, los Excel y los CSV.
 Analiza las imágenes una por una. Releva los links. Y arma una línea de tiempo
 completa con todo en su lugar.
 
-La mayor parte de lo que se habló en un proyecto no está en el texto del chat: está
-en las notas de voz que nadie volvió a escuchar y en los adjuntos. Un resumen que
-solo lee `_chat.txt` es un resumen que perdió lo importante.
+La mayor parte de lo que se habló no está en el texto del chat: está en las notas
+de voz que nadie volvió a escuchar y en los adjuntos. Un resumen que solo lee
+`_chat.txt` es un resumen que perdió lo importante.
+
+**No es solo para Claude.** Son dos cosas: unos scripts que hacen el trabajo
+pesado —transcribir, inventariar, leer documentos— y un método que le dice al
+asistente cómo usarlos. Los scripts son Python y corren en cualquier lado. El
+método viene en dos envases: [`SKILL.md`](SKILL.md) si usás Claude, e
+[`INSTRUCCIONES.md`](INSTRUCCIONES.md) para pegar en cualquier otro asistente.
+
+Lo único que hace falta es un asistente que pueda **ejecutar cosas en tu
+máquina**. No hace falta que sepas programar ni que abras una terminal: vos le
+pedís, él lo corre.
 
 ---
 
