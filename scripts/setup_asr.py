@@ -19,8 +19,10 @@ Donde queda el modelo:
 from __future__ import annotations  # anotaciones perezosas: corre en Python 3.8+
 
 import argparse
+import importlib
 import os
 import shutil
+import site
 import subprocess
 import sys
 import tarfile
@@ -28,6 +30,9 @@ import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ffmpeg_tools  # noqa: E402
 
 MODELOS = ("tiny", "base", "small", "medium")
 URL = ("https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/"
@@ -58,26 +63,50 @@ def err(msg):
 
 # ---------------------------------------------------------------- dependencias
 
-def instrucciones_ffmpeg() -> str:
-    if sys.platform == "darwin":
-        return "  macOS:    brew install ffmpeg"
-    if sys.platform == "win32":
-        return ("  Windows:  winget install Gyan.FFmpeg\n"
-                "            (o descargalo de https://ffmpeg.org/download.html\n"
-                "             y agrega la carpeta bin al PATH)")
-    return "  Linux:    sudo apt install ffmpeg     # o el gestor de tu distro"
-
-
 def buscar_ffmpeg():
     """ffmpeg del sistema, o el que trae el paquete imageio-ffmpeg si esta."""
-    ruta = shutil.which("ffmpeg")
-    if ruta:
-        return ruta
+    return ffmpeg_tools.ffmpeg()
+
+
+def asegurar_ffmpeg() -> bool:
+    """Deja el sistema con un ffmpeg utilizable, instalandolo si hace falta.
+
+    Este es el paso que decide si alguien que no programa puede usar el skill.
+    El ffmpeg del sistema exige Homebrew o winget; el de pip no exige nada.
+    Si falta, lo instalamos en vez de mandar al usuario a pelear con un gestor
+    de paquetes."""
+    if buscar_ffmpeg():
+        return True
+    say("==> Falta ffmpeg. Lo instalo como paquete de Python")
+    say("    (no hace falta Homebrew ni permisos de administrador)")
+    if pip_install("imageio-ffmpeg") and buscar_ffmpeg():
+        return True
+    err("")
+    err(ffmpeg_tools.instrucciones())
+    return False
+
+
+def refrescar_rutas():
+    """Hace visible lo que pip acaba de instalar, sin reiniciar el proceso.
+
+    Cuando el Python del sistema no es escribible —el caso normal en una
+    maquina ajena— pip instala en el 'user site' (~/.local/lib/pythonX.Y/...).
+    Python arma sys.path al arrancar y solo agrega esa carpeta SI YA EXISTE.
+    En una maquina donde nunca se instalo nada con pip, la carpeta no existe:
+    pip la crea e instala bien, pero el import que viene despues falla igual.
+
+    Resultado sin esto: la primera corrida falla siempre y la segunda anda.
+    Justo el estreno de alguien que no programa.
+    """
     try:
-        import imageio_ffmpeg  # noqa: PLC0415
-        return imageio_ffmpeg.get_ffmpeg_exe()
+        usuario = site.getusersitepackages()
     except Exception:
-        return None
+        usuario = None
+    rutas = [usuario] if isinstance(usuario, str) else (usuario or [])
+    for ruta in rutas:
+        if ruta and os.path.isdir(ruta) and ruta not in sys.path:
+            sys.path.append(ruta)
+    importlib.invalidate_caches()
 
 
 def pip_install(paquete: str) -> bool:
@@ -87,6 +116,7 @@ def pip_install(paquete: str) -> bool:
         try:
             subprocess.run(base + extra, check=True,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            refrescar_rutas()
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
             continue
@@ -107,6 +137,32 @@ def asegurar_paquete(modulo: str, paquete: str) -> bool:
         return True
     except ImportError:
         return False
+
+
+def importable_aparte(modulo: str) -> bool:
+    """Si un proceso nuevo puede importarlo, la instalacion salio bien y lo
+    unico viejo es el sys.path de ESTE proceso."""
+    try:
+        subprocess.run([sys.executable, "-c", "import " + modulo], check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except Exception:
+        return False
+
+
+def reintentar_desde_cero():
+    """Vuelve a arrancar este mismo script en un proceso nuevo, una sola vez.
+
+    Asi el usuario no tiene que enterarse de nada: si lo instalado recien no
+    era visible todavia, el proceso nuevo lo ve y sigue solo."""
+    if os.environ.get("ASR_REINTENTO"):
+        return
+    os.environ["ASR_REINTENTO"] = "1"
+    say("==> Reiniciando para tomar lo que se acaba de instalar")
+    try:
+        os.execv(sys.executable, [sys.executable] + sys.argv)
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------- descarga
@@ -166,12 +222,9 @@ def diagnostico() -> bool:
     ff = buscar_ffmpeg()
     if ff:
         say(f"  ffmpeg        {ff}")
+        say(f"  ffprobe       {ffmpeg_tools.ffprobe() or 'ausente (opcional)'}")
     else:
-        err("  ffmpeg        AUSENTE")
-        err(instrucciones_ffmpeg())
-        err("  Alternativa sin instalar nada a mano:")
-        err(f"    {Path(sys.executable).name} -m pip install imageio-ffmpeg")
-        ok = False
+        say("  ffmpeg        ausente — el instalador lo resuelve solo")
 
     try:
         import sherpa_onnx
@@ -209,16 +262,13 @@ def main() -> int:
         err("ERROR: hace falta Python 3.9 o mas nuevo.")
         return 1
 
-    if buscar_ffmpeg() is None:
-        err("ERROR: falta ffmpeg y es imprescindible para leer los audios.")
-        err(instrucciones_ffmpeg())
-        err("")
-        err("O, sin instalar nada a mano:")
-        err(f"  {Path(sys.executable).name} -m pip install imageio-ffmpeg")
+    if not asegurar_ffmpeg():
         return 1
 
     for modulo, paquete in (("numpy", "numpy"), ("sherpa_onnx", "sherpa-onnx")):
         if not asegurar_paquete(modulo, paquete):
+            if importable_aparte(modulo):
+                reintentar_desde_cero()   # si funciona, no vuelve de aca
             err(f"ERROR: no se pudo instalar {paquete}.")
             err("Proba con un entorno virtual:")
             err(f"  {Path(sys.executable).name} -m venv {home() / 'venv'}")

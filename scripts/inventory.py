@@ -27,6 +27,9 @@ import re
 import subprocess
 import sys
 import zipfile
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ffmpeg_tools  # noqa: E402
 from collections import Counter, defaultdict
 from datetime import datetime
 
@@ -78,15 +81,37 @@ def md5(path):
 
 
 def probe_duration(path):
-    try:
-        out = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-             "-of", "csv=p=0", path],
-            capture_output=True, text=True, timeout=60,
-            encoding="utf-8", errors="replace")
-        return round(float(out.stdout.strip()), 1)
-    except Exception:
+    """Duracion en segundos, si hay con que medirla.
+
+    Prueba ffprobe (lo trae el ffmpeg del sistema) y, si no esta, lee la
+    duracion del stderr de ffmpeg, que tambien sirve el ffmpeg que instala pip.
+    Si no hay ninguno de los dos, devuelve None y el inventario sigue sin la
+    duracion: es un dato lindo, no un requisito."""
+    probe = ffmpeg_tools.ffprobe()
+    if probe:
+        try:
+            out = subprocess.run(
+                [probe, "-v", "error", "-show_entries", "format=duration",
+                 "-of", "csv=p=0", path],
+                capture_output=True, text=True, timeout=60,
+                encoding="utf-8", errors="replace")
+            return round(float(out.stdout.strip()), 1)
+        except Exception:
+            pass
+
+    exe = ffmpeg_tools.ffmpeg()
+    if not exe:
         return None
+    try:
+        out = subprocess.run([exe, "-i", path], capture_output=True, text=True,
+                             timeout=60, encoding="utf-8", errors="replace")
+        m = re.search(r"Duration:\s*(\d+):(\d{2}):(\d{2}(?:\.\d+)?)", out.stderr)
+        if m:
+            h, mi, se = int(m.group(1)), int(m.group(2)), float(m.group(3))
+            return round(h * 3600 + mi * 60 + se, 1)
+    except Exception:
+        pass
+    return None
 
 
 def pdf_pages(path):

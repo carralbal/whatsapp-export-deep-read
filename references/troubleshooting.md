@@ -130,8 +130,10 @@ Lo que conviene tener en cuenta:
 
 **Usa `python`, no `python3`.** En Windows el comando suele ser `python`.
 
-**ffmpeg tiene que estar en el PATH.** `winget install Gyan.FFmpeg` lo resuelve.
-Si lo bajaste a mano, agrega su carpeta `bin` al PATH y abri una terminal nueva.
+**ffmpeg ya no hace falta instalarlo a mano.** Si no esta, `setup_asr.py` lo
+instala como paquete de Python (`imageio-ffmpeg`), que no necesita winget ni
+permisos de administrador. Si preferis el del sistema —trae ademas `ffprobe`,
+que sirve para medir duraciones—: `winget install Gyan.FFmpeg`.
 
 **Rutas largas.** Windows corta las rutas a 260 caracteres por defecto. Un
 export de WhatsApp tiene nombres de archivo largos, y si ademas lo descomprimis

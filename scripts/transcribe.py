@@ -31,6 +31,9 @@ import subprocess
 import sys
 import wave
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ffmpeg_tools  # noqa: E402
+
 import numpy as np
 
 CHUNK_SECONDS = 25   # Whisper trabaja en ventanas de 30 s; 25 deja margen
@@ -38,15 +41,15 @@ SR = 16000
 
 
 def to_wav(src, workdir):
-    if shutil.which("ffmpeg") is None:
-        raise SystemExit("Falta ffmpeg. macOS: brew install ffmpeg | "
-                         "Debian/Ubuntu: sudo apt install ffmpeg")
+    exe = ffmpeg_tools.ffmpeg()
+    if exe is None:
+        raise SystemExit(ffmpeg_tools.instrucciones())
     os.makedirs(workdir, exist_ok=True)
     base = os.path.splitext(os.path.basename(src))[0]
     dst = os.path.join(workdir, base + ".wav")
     if not os.path.exists(dst):
         subprocess.run(
-            ["ffmpeg", "-y", "-loglevel", "error", "-i", src,
+            [exe, "-y", "-loglevel", "error", "-i", src,
              "-vn", "-ar", str(SR), "-ac", "1", dst],
             check=True)
     return dst
@@ -59,12 +62,14 @@ def read_wave(path):
 
 
 def duration(path):
+    """Duracion en segundos leida del wav ya convertido.
+
+    Antes esto llamaba a ffprobe, pero el ffmpeg que instala pip
+    (imageio-ffmpeg) no trae ffprobe. El wav lo tenemos delante y el modulo
+    wave de la biblioteca estandar alcanza: una dependencia menos."""
     try:
-        out = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-             "-of", "csv=p=0", path], capture_output=True, text=True,
-            encoding="utf-8", errors="replace")
-        return round(float(out.stdout.strip()), 1)
+        with wave.open(path) as w:
+            return round(w.getnframes() / float(w.getframerate()), 1)
     except Exception:
         return None
 
@@ -138,7 +143,9 @@ def main():
             rec.decode_stream(s)
             parts.append(s.result.text.strip())
         text = " ".join(p for p in parts if p)
-        results[name] = {"duracion_s": duration(src), "texto": text}
+        # la duracion sale del wav convertido, no del original: asi no
+        # hace falta ffprobe, que el ffmpeg de pip no trae
+        results[name] = {"duracion_s": duration(wav), "texto": text}
         print(f"### {name}  ({results[name]['duracion_s']} s)")
         print(text)
         print(flush=True)
