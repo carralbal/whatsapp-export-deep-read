@@ -14,21 +14,57 @@ si el export tiene ese tipo de material.
 > N videos, texto íntegro de los PDF y planillas, y análisis de las N imágenes.
 > Fecha del export: DD/MM/AAAA HH:MM. Ventana cubierta: **DD/MM/AAAA → DD/MM/AAAA**.
 
-## 0. Índice
+## 0. Cobertura                    [obligatoria — va primero, siempre]
+
+El recuento, antes que nada. Quien abre el documento tiene que saber en dos
+segundos qué se leyó y qué no, sin buscarlo:
+
+    - Mensajes de texto leídos: X / X
+    - Audios transcriptos: X / X (MM:SS)
+    - Videos procesados: X / X
+    - Documentos leídos: X / X
+    - Imágenes analizadas: X / X
+    - Adjuntos mencionados pero ausentes del export: X
+
+Si alguna línea no está completa, decir en una frase por qué. Si los audios
+quedaron en cero habiendo audios, **eso va arriba de todo y en negrita**: el
+documento está incompleto y quien lo lea tiene que enterarse antes de leerlo,
+no después.
+
+## 1. Lo que hay que saber           [obligatoria — la síntesis, arriba]
+
+La síntesis va acá, al principio, no al final. Alguien que abre este documento
+quiere entender la conversación, no recorrerla: si lo primero que encuentra es
+el chat día por día, cierra el archivo antes de llegar a lo que vale.
+
+Cinco a diez viñetas con lo que un recién llegado necesita saber para poder
+opinar. No "se habló de presupuesto": **cuál** es el número, **quién** lo dijo,
+**cuándo** y si quedó cerrado o abierto. Cada punto con la fecha entre
+paréntesis, para poder ir a buscarlo en la línea de tiempo.
+
+Debajo, tres cosas más, cada una en su tabla o lista:
+
+- **Decisiones tomadas**: qué se decidió, quién, cuándo, y si alguien objetó.
+- **Pendientes y quién los tiene**: lo que quedó sin cerrar, con responsable.
+- **Datos duros**: números, fechas, montos, medidas, nombres propios.
+
+Esta sección es la que hace que el documento valga. El resto es el respaldo.
+
+## 2. Índice
 <lista de secciones>
 
-## 1. Inventario del export        [obligatoria]
+## 3. Inventario del export        [obligatoria]
 Tabla: # | Archivo | Tipo y peso/duración/páginas | Fecha | Emisor | Contenido en una línea
 Debajo: duplicados detectados por MD5, y adjuntos mencionados en el chat que no
 vinieron en el export.
 
-## 2. Participantes                [obligatoria]
+## 4. Participantes                [obligatoria]
 Tabla: Nombre en el chat | Rol inferido | Notas
 Incluir también a los terceros que se mencionan y no están en el grupo
 (contadores, proveedores, familiares, clientes), porque aparecen en las
 decisiones aunque no escriban.
 
-## 3. Línea de tiempo completa     [obligatoria — el corazón del documento]
+## 5. Línea de tiempo completa     [obligatoria — el respaldo, mensaje por mensaje]
 Subtítulo por día o por bloque temático, con una etiqueta de qué pasó ese día.
 Dentro de cada bloque, cada mensaje con su hora exacta y su emisor:
 
@@ -56,7 +92,7 @@ Marcar los silencios largos con un aviso visible:
 Señalar los mensajes editados y mostrar ambas versiones cuando la diferencia
 importa (listas de pendientes, montos, fechas).
 
-## 4..N. Anexos                    [según corresponda]
+## 6..N. Anexos                    [según corresponda]
 
 ### Anexo A — <nombre del documento> (texto íntegro)
 Transcripción completa del PDF o documento, respetando tablas, numeración y
@@ -84,7 +120,10 @@ y qué exigen.
 Por cada video: duración, transcripción del audio, y descripción de lo que se ve
 a lo largo del metraje.
 
-## N+1. Síntesis de conocimiento consolidada   [obligatoria]
+## N+1. Síntesis extendida                     [obligatoria]
+Lo de la sección 1 pero desarrollado, ahora que el lector ya recorrió la
+evidencia. No repetir las viñetas: desarrollarlas.
+
 Subsecciones típicas:
 - Qué es el proyecto / de qué trata la conversación
 - Los ejes en juego
@@ -96,7 +135,8 @@ Acá sí se interpreta, se conecta y se deduce. Marcar explícitamente lo deduci
 
 ## N+2. Datos duros en un solo lugar           [obligatoria si hay números]
 Todas las tablas de cifras, medidas, superficies, precios, plazos y estados,
-reunidas para no tener que buscarlas en la línea de tiempo.
+reunidas para no tener que buscarlas en la línea de tiempo. Es la versión
+completa de lo que la sección 1 resume.
 Incluir una tabla de pendientes con # | Pendiente | Responsable | Estado.
 
 ## N+3. Puntos abiertos, inconsistencias y riesgos detectados   [obligatoria]

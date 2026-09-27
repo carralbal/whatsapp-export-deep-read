@@ -58,7 +58,18 @@ Tres pasos. No hace falta terminal.
 **1. Bajá el proyecto.** Arriba en esta página: botón verde **Code** →
 **Download ZIP**. Descomprimí el archivo donde quieras.
 
-**2. Abrí Claude Code o Cowork** en esa carpeta.
+**2. Abrí Claude Code o Cowork** en esa carpeta, **en la aplicación de escritorio
+de tu computadora.**
+
+> Esto importa más de lo que parece. Si subís el `.zip` a un chat en el
+> navegador, o a una sesión que corre en la nube, el motor de transcripción no
+> se puede instalar y **los audios no se transcriben**. Lo confuso es que la
+> sesión igual ejecuta comandos y devuelve un documento con buena pinta: lo que
+> devuelve es el texto del chat ordenado, que es justo lo que este proyecto
+> existe para superar.
+>
+> La regla simple: **los archivos tienen que estar en tu disco y el asistente
+> tiene que estar corriendo en tu máquina.**
 
 **3. Pedíselo:**
 
@@ -163,9 +174,22 @@ el reporte.
 
 ## Uso
 
-1. En WhatsApp: abrí el grupo → **Exportar chat** → **Incluir archivos**
-2. Dejá el `.zip` en una carpeta
-3. Pedile a tu asistente que lea ese export
+**1. Exportá el grupo con los archivos.** En WhatsApp: abrí el grupo → buscá
+**Exportar chat**. Te va a preguntar si incluís los archivos: **decí que sí.**
+Según la versión el botón dice *Adjuntar archivos*, *Incluir archivos* o *Con
+multimedia*.
+
+> Este es el paso donde más gente se equivoca, y no avisa. Si no te preguntó
+> nada, o si el archivo que te quedó pesa unos pocos kilobytes, exportaste **sin
+> los archivos**: está el texto y nada más. Un export con los adjuntos pesa
+> megas, a veces cientos. Volvé a hacerlo.
+>
+> Si igual se te pasa, el inventario lo detecta y frena antes de procesar.
+
+**2. Dejá el `.zip` en una carpeta** a la que tu asistente tenga acceso.
+
+**3. Pedile que lo lea**, desde la aplicación de escritorio corriendo en tu
+computadora.
 
 Con Claude, el skill se activa solo cuando mencionás un export de WhatsApp.
 Si querés correr las piezas a mano:

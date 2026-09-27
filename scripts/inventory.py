@@ -71,6 +71,53 @@ ATTACH_RE_ANDROID = re.compile(
 )
 URL_RE = re.compile(r"https?://[^\s]+")
 
+# La falla mas comun y la mas silenciosa: exportar SIN los archivos.
+# WhatsApp no deja el nombre del adjunto sino una marca de omision, distinta
+# segun el sistema y el idioma:
+#   Android: <Multimedia omitido>        iOS: audio omitido / imagen omitida
+#   ingles:  <Media omitted>                  audio omitted / image omitted
+# Un export asi se procesa igual y devuelve un documento que PARECE completo,
+# pero sin una sola nota de voz. Por eso hay que DETENERSE, no avisar al pasar.
+OMITIDO_RE = re.compile(
+    r"^\s*<?\s*(?:multimedia|media|audio|imagen|image|v[íi]deo|video|sticker|gif|"
+    r"documento|document|archivo|file|foto|photo|contacto|contact|ubicaci[óo]n)"
+    r"\s*(?:omitid[oa]s?|omitted)\s*>?\s*$", re.I)
+
+
+def contar_omitidos(messages) -> int:
+    """Cuantos mensajes son una marca de 'archivo omitido'."""
+    return sum(1 for m in messages if OMITIDO_RE.match(m.get("text", "") or ""))
+
+
+AVISO_SIN_ARCHIVOS = """
+===============================================================================
+  ESTE EXPORT NO TRAE LOS ARCHIVOS. NO SE PUEDE SEGUIR.
+===============================================================================
+
+  Se encontraron {n} mensajes que dicen "omitido" y ningun archivo de audio,
+  imagen o documento en la carpeta. Eso significa que el chat se exporto
+  SIN los adjuntos: esta el texto y nada mas.
+
+  Procesar esto daria un documento que parece completo y no tiene una sola
+  nota de voz. Justo lo que este skill existe para evitar.
+
+  QUE HACER: volver a exportar el chat.
+
+    En WhatsApp, abri el grupo y busca "Exportar chat".
+    Te va a preguntar si incluis los archivos. Deci que SI.
+    Segun la version el boton dice "Adjuntar archivos", "Incluir archivos"
+    o "Con multimedia".
+
+  COMO SABER SI SALIO BIEN: el archivo nuevo tiene que pesar bastante mas.
+  Un export sin archivos pesa unos pocos kilobytes; uno con los archivos
+  pesa megas, y a veces cientos.
+
+  Si de verdad solo tenes el texto y queres seguir igual, agrega --solo-texto.
+  El documento saldra sin audios, sin imagenes y sin documentos, y hay que
+  decirlo en la nota metodologica.
+===============================================================================
+"""
+
 
 def md5(path):
     h = hashlib.md5()
@@ -216,6 +263,8 @@ def main():
         description="Inventaria un export de WhatsApp (.zip o carpeta).")
     ap.add_argument("entrada", help="ruta al .zip exportado o a la carpeta ya descomprimida")
     ap.add_argument("--json", default=None)
+    ap.add_argument("--solo-texto", action="store_true",
+                    help="seguir aunque el export no traiga los archivos")
     args = ap.parse_args()
 
     entrada = os.path.abspath(args.entrada)
@@ -269,6 +318,25 @@ def main():
               file=sys.stderr)
     messages, fmt = parse_chat(chat_path) if chat_path else ([], None)
 
+    # --- la puerta: un export sin archivos no se procesa ---
+    omitidos = contar_omitidos(messages)
+    # Ojo: el propio _chat.txt cuenta como "documento". Si no se lo excluye,
+    # la lista nunca queda vacia y esta puerta no se dispara jamas.
+    chat_name = os.path.basename(chat_path) if chat_path else None
+    con_contenido = [f for f in files
+                     if f["kind"] in ("audio", "video", "imagen", "documento")
+                     and f["name"] != chat_name]
+    if omitidos and not con_contenido and not args.solo_texto:
+        print(AVISO_SIN_ARCHIVOS.format(n=omitidos), file=sys.stderr)
+        return 2
+    if omitidos and con_contenido:
+        print(f"\nAVISO: hay {omitidos} adjuntos marcados como omitidos y "
+              f"{len(con_contenido)} archivos presentes.\n"
+              "  El export trajo los archivos, pero algunos ya no estaban en el\n"
+              "  telefono cuando se exporto. Esos no se pueden recuperar: van\n"
+              "  al documento como huecos declarados, no se omiten en silencio.",
+              file=sys.stderr)
+
     present = {f["name"] for f in files}
     mentioned = []
     for m in messages:
@@ -301,6 +369,7 @@ def main():
             "video_segundos": round(video_total, 1),
             "paginas_pdf": sum(f.get("pages") or 0 for f in files),
             "grupos_duplicados": sum(1 for v in by_hash.values() if len(v) > 1),
+            "adjuntos_omitidos_por_el_export": omitidos,
         },
         "rango": {
             "desde": dts[0].isoformat() if dts else None,
