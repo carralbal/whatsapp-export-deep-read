@@ -15,6 +15,42 @@ permanente del proyecto o de la conversación.
 
 ---
 
+## Antes que nada: tres condiciones para poder empezar
+
+Estas tres cosas se verifican **antes** de procesar nada. Si alguna falla, hay
+que **frenar y decirlo**, no seguir y entregar un documento incompleto que
+parece completo. Un documento así es peor que no entregar nada: el usuario no
+tiene forma de darse cuenta de lo que falta.
+
+**1. ¿El export trae los archivos?**
+`inventory.py` corta solo con código 2 si detecta un export hecho sin adjuntos.
+Si eso pasa, **no insistir, no usar `--solo-texto` por cuenta propia**: hay que
+pedirle a la persona que vuelva a exportar incluyendo los archivos, y explicarle
+cómo. El `--solo-texto` existe solo para cuando la persona, ya avisada, dice
+explícitamente que quiere seguir igual.
+
+**2. ¿Esto corre en la máquina de la persona?**
+El motor de transcripción se instala y corre localmente. Si el entorno no puede
+instalar desde PyPI —error 403, "host not in allowlist", sin salida a internet—
+casi siempre significa que **esto se está ejecutando en un servidor y no en la
+computadora de la persona**. Frenar y decírselo con estas palabras:
+
+> Esto se está ejecutando en la nube, no en tu computadora, y desde acá no puedo
+> instalar el motor que transcribe los audios. Abrí la aplicación de escritorio,
+> dale acceso a la carpeta donde está el export, y pedímelo de nuevo desde ahí.
+
+No ofrecer procesar "todo lo demás igual" como si fuera una alternativa
+razonable. Sin los audios, el resultado es un volcado del chat: exactamente lo
+que este skill existe para reemplazar.
+
+**3. ¿Están los scripts?**
+Si hay `SKILL.md` pero falta la carpeta `scripts/`, la instalación quedó
+incompleta —pasa cuando se guarda el skill desde una tarjeta de "guardar skill",
+que copia solo este archivo. Decirlo y pedir la carpeta completa del repositorio
+en vez de intentar el proceso a mano: sin `transcribe.py` no hay transcripción.
+
+---
+
 ## Flujo de trabajo
 
 Seguir este orden. Cada etapa alimenta a la siguiente.
@@ -233,18 +269,26 @@ Usar la estructura de `references/output-template.md`. Es la que se probó y
 funciona. Resumen de las secciones:
 
 ```
-0. Índice
-1. Inventario del export (tabla con todos los archivos, duplicados, huecos)
-2. Participantes (quién es quién, rol inferido, terceros mencionados)
-3. Línea de tiempo completa  ← el corazón del documento
-4..N. Anexos por documento (texto íntegro de cada PDF/planilla)
+0. Cobertura (qué se leyó y qué no)    ← primero, siempre
+1. Lo que hay que saber                ← la síntesis, arriba
+      decisiones tomadas · pendientes con responsable · datos duros
+2. Índice
+3. Inventario del export (tabla con todos los archivos, duplicados, huecos)
+4. Participantes (quién es quién, rol inferido, terceros mencionados)
+5. Línea de tiempo completa  ← el respaldo, mensaje por mensaje
+6..N. Anexos por documento (texto íntegro de cada PDF/planilla)
       Anexo de planos / imágenes
       Anexo de normativa, especificaciones o fuentes citadas
-N+1. Síntesis de conocimiento consolidada
+N+1. Síntesis extendida
 N+2. Datos duros en un solo lugar (tablas)
 N+3. Puntos abiertos, inconsistencias y riesgos detectados
 N+4. Nota metodológica
 ```
+
+**El orden importa y no es negociable.** La síntesis va arriba porque quien abre
+el documento quiere entender la conversación, no recorrerla. Si lo primero que
+encuentra es el chat día por día, cierra el archivo antes de llegar a lo que
+vale — y concluye, con razón, que la herramienta no agregó nada.
 
 ### Criterios de escritura
 
@@ -295,8 +339,15 @@ analizada, y cerrar con un recuento de cobertura:
 - Adjuntos mencionados pero ausentes del export: X
 ```
 
-Ese recuento es la prueba de que se leyó el 100%. Si algo quedó sin procesar,
-decirlo ahí en vez de omitirlo.
+Ese recuento es la prueba de que se leyó el 100%, y por eso va **también al
+principio del documento**, no solo en el chat. Es lo primero que necesita ver
+alguien que abre el `.md`: qué se leyó y qué no.
+
+Si algo quedó sin procesar, decirlo ahí en vez de omitirlo. Y si la cobertura de
+audios quedó en cero habiendo audios en el export, eso no es una línea más del
+recuento: es un **fracaso del procesamiento** y hay que encabezar la respuesta
+con eso, explicando por qué pasó y cómo se arregla. Entregar un documento sin
+audios como si fuera el producto terminado es el peor resultado posible.
 
 ---
 
