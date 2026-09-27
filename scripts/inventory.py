@@ -89,14 +89,22 @@ def contar_omitidos(messages) -> int:
     return sum(1 for m in messages if OMITIDO_RE.match(m.get("text", "") or ""))
 
 
+def frase_omitidos(n: int) -> str:
+    """Singular y plural. Este cartel es lo mas visible del proyecto:
+    un 'Se encontraron 1 mensajes' arruina la impresion de todo lo demas."""
+    if n == 1:
+        return 'Se encontro 1 mensaje que dice "omitido"'
+    return f'Se encontraron {n} mensajes que dicen "omitido"'
+
+
 AVISO_SIN_ARCHIVOS = """
 ===============================================================================
   ESTE EXPORT NO TRAE LOS ARCHIVOS. NO SE PUEDE SEGUIR.
 ===============================================================================
 
-  Se encontraron {n} mensajes que dicen "omitido" y ningun archivo de audio,
-  imagen o documento en la carpeta. Eso significa que el chat se exporto
-  SIN los adjuntos: esta el texto y nada mas.
+  {frase}.
+  No hay ningun archivo de audio, imagen o documento en la carpeta: el chat
+  se exporto SIN los adjuntos, esta el texto y nada mas.
 
   Procesar esto daria un documento que parece completo y no tiene una sola
   nota de voz. Justo lo que este skill existe para evitar.
@@ -327,11 +335,15 @@ def main():
                      if f["kind"] in ("audio", "video", "imagen", "documento")
                      and f["name"] != chat_name]
     if omitidos and not con_contenido and not args.solo_texto:
-        print(AVISO_SIN_ARCHIVOS.format(n=omitidos), file=sys.stderr)
+        print(AVISO_SIN_ARCHIVOS.format(frase=frase_omitidos(omitidos)),
+              file=sys.stderr)
         return 2
     if omitidos and con_contenido:
-        print(f"\nAVISO: hay {omitidos} adjuntos marcados como omitidos y "
-              f"{len(con_contenido)} archivos presentes.\n"
+        uno = omitidos == 1
+        print(f"\nAVISO: hay {omitidos} adjunto{'' if uno else 's'} "
+              f"marcado{'' if uno else 's'} como omitido{'' if uno else 's'} y "
+              f"{len(con_contenido)} archivo{'' if len(con_contenido) == 1 else 's'} "
+              f"presente{'' if len(con_contenido) == 1 else 's'}.\n"
               "  El export trajo los archivos, pero algunos ya no estaban en el\n"
               "  telefono cuando se exporto. Esos no se pueden recuperar: van\n"
               "  al documento como huecos declarados, no se omiten en silencio.",
