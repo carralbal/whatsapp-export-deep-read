@@ -58,7 +58,7 @@ Tres pasos. No hace falta terminal.
 **1. Bajá el proyecto.** Arriba en esta página: botón verde **Code** →
 **Download ZIP**. Descomprimí el archivo donde quieras.
 
-**2. Abrí Claude Code o Cowork** en esa carpeta, **en la aplicación de escritorio
+**2. Abrí Claude Cowork** en esa carpeta, **en la aplicación de escritorio
 de tu computadora.**
 
 > Esto importa más de lo que parece. Si subís el `.zip` a un chat en el
@@ -111,30 +111,27 @@ cp -r whatsapp-export-deep-read ~/.claude/skills/
 
 En Cowork alcanza con dejar la carpeta donde la sesión tenga acceso.
 
-### Con ChatGPT Work *(sin verificar)*
-
-ChatGPT no carga skills de Claude, pero **Work en la app de escritorio** accede
-a carpetas locales y ejecuta programas, así que el camino debería ser el mismo:
-
-**1.** Bajá el ZIP y descomprimilo.
-
-**2.** En la app de escritorio, en modo Work, dale acceso a esa carpeta.
-
-**3.** Pedile:
-
-> Leé `INSTRUCCIONES.md` de esta carpeta y seguí ese método. Empezá corriendo
-> `scripts/setup_asr.py` para instalar el motor de transcripción.
-
-**4.** Después:
-
-> Leé este export de WhatsApp: `/ruta/al/export.zip`
+### Con ChatGPT Work *(probablemente no alcance)*
 
 Los scripts son Python puro y no dependen de Claude en absoluto: el único
-componente específico de Claude es el `SKILL.md`, que acá se reemplaza por
-`INSTRUCCIONES.md`.
+componente específico de Claude es el `SKILL.md`, que se reemplaza por
+[`INSTRUCCIONES.md`](INSTRUCCIONES.md). Así que en principio cualquier asistente
+con acceso a tu disco debería poder usarlos.
 
-> **Esto no está probado.** No tengo ChatGPT para verificarlo. Si lo corrés ahí
-> y funciona —o si no—, abrí un issue y lo documentamos.
+El problema con ChatGPT Work es otro. Según el centro de ayuda de OpenAI, Work
+**accede a carpetas locales**, pero **ejecutar programas en tu máquina es tarea
+de Codex, no de Work**. Y acá hace falta ejecutar: sin correr `setup_asr.py` y
+`transcribe.py` no hay transcripción.
+
+Si eso es así, en ChatGPT Work vas a poder leer el texto, los documentos y las
+imágenes, pero **ningún audio**. Que es justamente la parte por la que este
+proyecto existe.
+
+> **No lo probamos.** La distinción Work / Codex sale de la documentación, no de
+> haberlo corrido, y la propia gente de OpenAI tiene un issue abierto sobre lo
+> confuso que es el tema. Si lo intentás, contá qué pasó cuando le pediste
+> correr `scripts/setup_asr.py`: si lo corrió o si se negó. Con eso alcanza para
+> saberlo y lo documentamos acá.
 
 ### Con cualquier otro asistente
 
@@ -153,8 +150,8 @@ ningún asistente escucha un `.opus` sin el motor local.
 - **Python 3.8 o más nuevo.** macOS y la mayoría de los Linux ya lo traen. En
   Windows: `winget install Python.Python.3.12`
 - **Un asistente que pueda ejecutar scripts y leer archivos de tu máquina**:
-  Claude Code, Cowork, o cualquier otro con esa capacidad. Pegando esto en un
-  chat web no funciona, porque ese chat no ve tu disco.
+  Claude Cowork, Claude Code, o cualquier otro con esa capacidad. Pegando esto
+  en un chat web no funciona, porque ese chat no ve tu disco.
 - **~1 GB de disco** para el modelo de transcripción, o ~110 MB con `tiny`.
 
 **ffmpeg no está en esta lista a propósito**: el instalador lo resuelve solo si
@@ -259,7 +256,7 @@ Detecta automáticamente cuál de los dos formatos de chat es.
 
 ### ¿Tengo que usar la terminal?
 
-No. Bajás el ZIP, lo descomprimís, y le decís a Claude Code o a Cowork
+No. Bajás el ZIP, lo descomprimís, y le decís a Claude Cowork
 *"instalá el skill de esta carpeta"*. El asistente corre todo, incluido ffmpeg
 si te falta. Después le pedís *"leé este export de WhatsApp"* y listo.
 
@@ -277,9 +274,11 @@ subir el export entero, que choca con el límite de tamaño por archivo y ademá
 manda toda la conversación del grupo a sus servidores — justo lo que este skill
 evita.
 
-**ChatGPT Work en la app de escritorio: en teoría sí.** Esa versión accede a
-carpetas locales con tu permiso y corre programas en tu máquina. **No está
-verificado**: si lo probás, contá cómo te fue.
+**ChatGPT Work en la app de escritorio: probablemente no alcance.** Accede a
+carpetas locales con tu permiso, pero ejecutar programas en tu máquina es tarea
+de Codex, no de Work — y acá hace falta ejecutar. Sin eso tendrías el texto y
+los documentos, pero ningún audio. **No está verificado**: si lo probás, contá
+qué pasó cuando le pediste correr `scripts/setup_asr.py`.
 
 **Cualquier asistente, sin instalar nada: parcialmente.** Pegá
 [`INSTRUCCIONES.md`](INSTRUCCIONES.md) como instrucción de tu proyecto. Funciona
