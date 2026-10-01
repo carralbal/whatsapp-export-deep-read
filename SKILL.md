@@ -263,10 +263,29 @@ resumirlo. Si el contenido del link ya fue pegado en el chat, no hace falta.
 
 ---
 
-## 8. Escribir el documento
+## 8. Escribir los documentos
 
-Usar la estructura de `references/output-template.md`. Es la que se probó y
-funciona. Resumen de las secciones:
+**Son dos archivos, no uno.** `references/output-template.md` trae las dos
+plantillas.
+
+| Archivo | Qué es | Extensión |
+|---|---|---|
+| `<nombre> — resumen.md` | Lo que la persona quería saber | Dos páginas |
+| `<nombre> — completo.md` | Todo el respaldo, mensaje por mensaje | Sin techo |
+
+Quien pide esto quiere **entender la conversación**, no recorrerla. Un archivo
+de seiscientas líneas entrega la materia prima de entender, no el entender. El
+completo existe porque es la prueba de que se leyó el 100% y porque es donde se
+busca el detalle — pero **el entregable es el corto**.
+
+Escribir primero el completo, porque el resumen se destila de él. Entregar los
+dos y decir en una línea cuál abrir primero.
+
+El resumen lleva: cobertura, qué pasó (5 a 10 viñetas con fecha), decisiones
+tomadas, pendientes con responsable, datos duros y puntos abiertos. Si no entra
+en dos páginas, lo que sobra va al completo.
+
+Estructura del completo:
 
 ```
 0. Cobertura (qué se leyó y qué no)    ← primero, siempre
@@ -323,8 +342,13 @@ volver al zip.
 
 ## 9. Entregar
 
-Guardar el `.md` junto al export, con un nombre que identifique la
-conversación, y entregarlo al usuario.
+Guardar **los dos `.md`** junto al export, con un nombre que identifique la
+conversación, y entregarle los dos al usuario diciendo cuál abrir primero:
+
+> Te dejo dos archivos. Abrí **`<nombre> — resumen.md`**: son dos páginas con
+> lo que se habló, las decisiones y los pendientes. El otro, `<nombre> —
+> completo.md`, tiene todo el respaldo mensaje por mensaje, por si querés ir al
+> detalle de algo.
 
 En la respuesta del chat, **no repetir el documento**. Decir en pocas líneas los
 dos o tres hallazgos que nadie había escrito todavía en la conversación

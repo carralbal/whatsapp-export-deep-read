@@ -25,7 +25,13 @@ pedís, él lo corre.
 
 ## Qué te devuelve
 
-Un `.md` con esta estructura:
+**Dos archivos.**
+
+**`<grupo> — resumen.md`** es el que vas a leer: dos páginas con lo que se
+habló, las decisiones tomadas, los pendientes con nombre y apellido, los datos
+duros y lo que quedó abierto. Cada punto con su fecha, para poder ir a buscarlo.
+
+**`<grupo> — completo.md`** es el respaldo:
 
 - Inventario del export: todos los archivos, duplicados detectados por MD5, y los
   adjuntos que alguien mencionó pero no están en el export
@@ -33,10 +39,15 @@ Un `.md` con esta estructura:
 - **Línea de tiempo completa**: cada mensaje con hora y emisor, cada audio
   transcripto en su posición cronológica, cada adjunto señalado donde se envió
 - Anexos con el texto íntegro de cada documento
-- Síntesis, datos duros en tablas, y puntos abiertos e inconsistencias
+- Síntesis extendida, datos duros en tablas, y puntos abiertos e inconsistencias
 - Nota metodológica: con qué se transcribió y qué quedó fuera
 
-Y un recuento de cobertura, que es la prueba de que se leyó el 100%:
+Son dos porque lo que querés es **entender la conversación**, y un archivo de
+seiscientas líneas te da la materia prima de entender, no el entender. El largo
+existe porque es la prueba de que se leyó todo y porque ahí vas a buscar el
+detalle cuando lo necesites.
+
+Los dos empiezan con el recuento de cobertura, que es esa prueba:
 
 ```
 - Mensajes de texto leídos: 412 / 412
@@ -58,18 +69,25 @@ Tres pasos. No hace falta terminal.
 **1. Bajá el proyecto.** Arriba en esta página: botón verde **Code** →
 **Download ZIP**. Descomprimí el archivo donde quieras.
 
-**2. Abrí Claude Cowork** en esa carpeta, **en la aplicación de escritorio
-de tu computadora.**
+**2. Instalá la aplicación de escritorio de Claude**, desde
+[claude.ai/download](https://claude.ai/download). Abrila, entrá en **Cowork** y
+dale acceso a esa carpeta.
 
-> Esto importa más de lo que parece. Si subís el `.zip` a un chat en el
-> navegador, o a una sesión que corre en la nube, el motor de transcripción no
-> se puede instalar y **los audios no se transcriben**. Lo confuso es que la
-> sesión igual ejecuta comandos y devuelve un documento con buena pinta: lo que
-> devuelve es el texto del chat ordenado, que es justo lo que este proyecto
-> existe para superar.
+> **El Claude del navegador no sirve para esto**, y es el error más común.
+> Alguien que probó esto lo hizo desde claude.ai en el navegador, sin saber que
+> existía otra cosa; cuando le preguntaron si había usado Cowork contestó *"ni
+> idea, ¿dónde me fijo?"*. Es una pregunta razonable, así que: **Cowork es un
+> modo de la aplicación de escritorio**, la que se baja de ese link, y es la
+> única que puede tocar archivos de tu disco.
 >
-> La regla simple: **los archivos tienen que estar en tu disco y el asistente
-> tiene que estar corriendo en tu máquina.**
+> Lo confuso es que el Claude del navegador **igual ejecuta comandos** y te
+> devuelve un documento con buena pinta. Pero corre en un servidor, no en tu
+> computadora: ahí el motor de transcripción no se puede instalar y **los audios
+> no se transcriben**. Lo que te devuelve es el texto del chat ordenado, que es
+> justo lo que este proyecto existe para superar.
+>
+> La regla simple: **los archivos tienen que estar en tu disco y Claude tiene
+> que estar corriendo en tu máquina.**
 
 **3. Pedíselo:**
 
@@ -83,7 +101,7 @@ Cuando termine, pedile que lea tu export:
 
 > Leé este export de WhatsApp: `/ruta/al/export.zip`
 
-Eso es todo.
+Te devuelve los dos archivos. Empezá por el que dice **resumen**.
 
 ### Si preferís hacerlo a mano
 

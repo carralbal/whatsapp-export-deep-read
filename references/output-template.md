@@ -1,10 +1,70 @@
-# Plantilla del documento de salida
+# Plantillas de los documentos de salida
+
+**Son dos archivos, no uno.** Esto no es un detalle de formato: es la diferencia
+entre entregar la materia prima y entregar el entendimiento.
+
+| Archivo | Qué es | Extensión |
+|---|---|---|
+| `<nombre> — resumen.md` | Lo que la persona quería saber | Dos páginas |
+| `<nombre> — completo.md` | Todo el respaldo, mensaje por mensaje | Sin techo |
+
+**Por qué dos.** Un usuario real lo pidió con estas palabras: *"que hagas las dos
+cosas, uno por separado con toda la info y uno más resumido"*. Había recibido un
+documento largo, esperaba un resumen ejecutivo, y no encontró el valor aunque
+estuviera adentro. Quien abre esto quiere **entender la conversación**; un
+archivo de seiscientas líneas entrega la materia prima de entender, no el
+entender. El largo sigue existiendo porque es la prueba de que se leyó el 100% y
+porque es donde se va a buscar el detalle cuando haga falta — pero el entregable
+es el corto.
+
+Entregar los dos y decir en una línea cuál abrir primero.
+
+---
+
+# 1. El resumen — `<nombre> — resumen.md`
+
+Dos páginas. Si no entra en dos páginas, está mal hecho: lo que sobra va al
+completo.
+
+```markdown
+# <Nombre del chat> — Resumen
+
+> Del export de WhatsApp de **"<nombre exacto>"**, DD/MM/AAAA → DD/MM/AAAA.
+> El detalle completo está en `<nombre> — completo.md`.
+
+## Cobertura
+Las seis líneas del recuento, tal cual aparecen abajo. Van primero también acá:
+si falta algo, la persona tiene que saberlo antes de leer una conclusión.
+
+## Lo que pasó
+Cinco a diez viñetas. Lo que un recién llegado necesita para poder opinar.
+No "se habló de presupuesto": **cuál** es el número, **quién** lo dijo, **cuándo**,
+y si quedó cerrado o abierto. Fecha entre paréntesis en cada punto.
+
+## Decisiones tomadas
+Tabla: Qué se decidió | Quién | Cuándo | Objeciones
+
+## Pendientes
+Tabla: Qué falta | Quién lo tiene | Desde cuándo | Estado
+Si nadie quedó a cargo de algo, decirlo: eso es un hallazgo, no un hueco.
+
+## Datos duros
+Tabla con los números, montos, fechas, medidas y nombres propios que importan.
+
+## Puntos abiertos
+Lo que no se decidió, lo que quedó contradictorio, lo que nadie contestó.
+
+## Dónde está el detalle
+Una línea: qué hay en el completo y cómo buscarlo.
+```
+
+---
+
+# 2. El completo — `<nombre> — completo.md`
 
 Copiar esta estructura y llenarla. Las secciones marcadas como obligatorias van
 siempre, aunque queden cortas. Las que dicen "según corresponda" se agregan solo
 si el export tiene ese tipo de material.
-
----
 
 ```markdown
 # <Nombre del chat o proyecto> — Base de conocimiento completa
@@ -33,22 +93,11 @@ no después.
 
 ## 1. Lo que hay que saber           [obligatoria — la síntesis, arriba]
 
-La síntesis va acá, al principio, no al final. Alguien que abre este documento
-quiere entender la conversación, no recorrerla: si lo primero que encuentra es
-el chat día por día, cierra el archivo antes de llegar a lo que vale.
+El mismo contenido del resumen, repetido acá. La repetición es a propósito: los
+dos archivos circulan por separado y cada uno tiene que servir solo.
 
-Cinco a diez viñetas con lo que un recién llegado necesita saber para poder
-opinar. No "se habló de presupuesto": **cuál** es el número, **quién** lo dijo,
-**cuándo** y si quedó cerrado o abierto. Cada punto con la fecha entre
-paréntesis, para poder ir a buscarlo en la línea de tiempo.
-
-Debajo, tres cosas más, cada una en su tabla o lista:
-
-- **Decisiones tomadas**: qué se decidió, quién, cuándo, y si alguien objetó.
-- **Pendientes y quién los tiene**: lo que quedó sin cerrar, con responsable.
-- **Datos duros**: números, fechas, montos, medidas, nombres propios.
-
-Esta sección es la que hace que el documento valga. El resto es el respaldo.
+Si lo primero que encuentra quien abre esto es el chat día por día, cierra el
+archivo antes de llegar a lo que vale.
 
 ## 2. Índice
 <lista de secciones>
