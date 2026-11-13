@@ -64,7 +64,8 @@ Seguir este orden. Cada etapa alimenta a la siguiente.
 6. Analizar imágenes
 7. Relevar links
 8. Escribir el documento
-9. Entregar
+9. **Verificar lo que se escribió**
+10. Entregar
 
 No empezar a escribir el documento hasta terminar las etapas 1 a 7. Escribir
 antes lleva a un documento que describe lo que se vio primero y trata el resto
@@ -357,7 +358,83 @@ volver al zip.
 
 ---
 
-## 9. Entregar
+## 9. Verificar lo que se escribió
+
+Las etapas 1 a 7 las hacen scripts probados. La etapa 8 la escribe el modelo, y
+ahí entran al documento datos que **no estaban en el export**: porcentajes,
+totales, plazos, diferencias de fechas. Son el aporte principal del documento y
+son lo único que nadie verificó.
+
+Un número inventado con cara de hallazgo es peor que una omisión: el lector no
+tiene cómo detectarlo, y si lo descubre después deja de confiar en todo lo
+demás. Esta etapa no es opcional.
+
+### 9.1 Recalcular todas las cuentas propias
+
+Hacer una lista de **cada cuenta que el documento afirma** y recalcularla
+**ejecutando código**, nunca de memoria. Una por una, con el valor que dice el
+documento al lado del valor real.
+
+```bash
+python3 - <<'PY'
+from datetime import date
+def v(etq, dice, real):
+    print(("OK   " if dice == real else "ERROR"), etq, "| dice", dice, "| real", real)
+v("IVA 21% de 10.000", 2100, round(10000*0.21))
+v("14.200 es X% mas que 10.000", 21, round((14200-10000)/10000*100))
+v("vencimiento 5/8 + 30 dias", "2026-09-04", str(date(2026,8,5)+__import__("datetime").timedelta(days=30)))
+PY
+```
+
+Entran en la lista: sumas y totales, **porcentajes de variación**, promedios,
+conversiones, cantidades de días entre dos fechas, vencimientos, antigüedades y
+cualquier "X veces más".
+
+**La trampa más común es el porcentaje.** Si en la misma tabla hay una alícuota
+—IVA 21 %, un recargo, un descuento—, es fácil escribir esa cifra en lugar del
+aumento real. El patrón, con números de ejemplo: el documento dice que un total
+de 14.200 es *"un 21 % más"* que uno anterior de 10.000. Es **42 %**; el 21 era
+la alícuota de IVA que estaba tres renglones más arriba.
+
+Si una cuenta da distinto, **corregir el documento**, no la cuenta.
+
+### 9.2 Verificar que cada cita textual exista
+
+Toda frase entrecomillada como cita tiene que aparecer **literal** en alguna
+fuente: el `_chat.txt`, una transcripción, el texto de un documento o lo leído
+en una imagen. Buscarlas normalizando espacios y saltos de línea, que es donde
+fallan las comparaciones ingenuas.
+
+Si una cita se normalizó —una tilde que el original no tenía, puntuación
+agregada para que se lea— **decirlo en la nota metodológica**. Si una elisión
+junta dos tramos separados, que el `…` esté.
+
+### 9.3 Cotejar los conteos
+
+- Mensajes en la línea de tiempo **contra** el total del inventario.
+- Mensajes por participante **contra** el inventario.
+- Transcripciones **contra** cantidad de audios.
+- Imágenes descriptas **contra** imágenes del export.
+
+Si alguno no cierra, el documento no está terminado.
+
+### 9.4 Chequear que el resumen no haya perdido lo que importa
+
+Cada dato duro de la tabla del completo tiene que poder buscarse en el resumen
+o estar deliberadamente afuera. Un dato que solo vivía en una imagen o en un
+audio y que se perdió al destilar es el peor lugar donde perderlo: es
+exactamente lo que nadie más iba a encontrar.
+
+### 9.5 Decir que se verificó
+
+En la nota metodológica, una línea con qué se verificó y qué se corrigió. Si
+una cuenta salió mal y se arregló, **dejarlo escrito**. Un documento que
+muestra sus correcciones es más confiable que uno que aparenta no haberlas
+necesitado.
+
+---
+
+## 10. Entregar
 
 Guardar **los dos `.md`** junto al export, con un nombre que identifique la
 conversación, y entregarle los dos al usuario diciendo cuál abrir primero:
