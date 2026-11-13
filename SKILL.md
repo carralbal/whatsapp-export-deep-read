@@ -248,6 +248,40 @@ for h in x.sheet_names:
 "
 ```
 
+#### Las celdas con fórmula vuelven vacías, y eso vacía la columna del dinero
+
+Un `.xlsx` guarda la fórmula y, aparte, el último valor que Excel calculó. Una
+planilla que se armó con un script, o que se mandó sin abrirse, **no tiene ese
+valor guardado**: pandas y openpyxl devuelven `NaN` o `None` en cada celda
+calculada.
+
+En una planilla de presupuesto eso significa que **los subtotales y el total
+—es decir, todo lo que importa— vuelven en blanco**, sin ningún aviso. El
+documento sale sin un solo número y nada indica que falte algo.
+
+Hay que **mirar siempre las dos versiones** y comparar:
+
+```bash
+python3 - <<'PY'
+from openpyxl import load_workbook
+for modo, etq in ((True, "valor guardado"), (False, "formula")):
+    ws = load_workbook("archivo.xlsx", data_only=modo).active
+    print("==", etq)
+    for fila in ws.iter_rows(values_only=True):
+        print("  ", fila)
+PY
+```
+
+Si con `data_only=True` las celdas vienen vacías y con `data_only=False`
+aparece algo como `=B5*C5`, **la planilla no trae los resultados y hay que
+calcularlos**: leer las fórmulas, reproducir la cuenta y dejar escrito en la
+nota metodológica que esos números se recalcularon y no se copiaron. Después
+pasan por la verificación de la etapa 9 como cualquier cuenta propia.
+
+Lo mismo vale para una planilla que llega **con** valores guardados: si un
+total no coincide con la suma de sus componentes, el valor guardado quedó
+viejo. Decirlo, no elegir uno en silencio.
+
 ### Links a Google Sheets / Docs / Drive
 
 No se pueden abrir sin autenticación. Registrarlos en el documento como fuentes
