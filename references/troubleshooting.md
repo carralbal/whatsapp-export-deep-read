@@ -123,10 +123,23 @@ Ahi se ven los caracteres invisibles que en pantalla parecen un espacio comun.
 ## Windows
 
 El instalador y los scripts son Python puro y estan escritos para funcionar en
-Windows, pero **nadie lo verifico todavia en Windows real**. Si lo corres ahi y
-algo falla, abri un issue: es informacion util.
+Windows, pero **nadie lo corrio todavia en una Windows de verdad**. Lo que si
+se hizo es una revision del codigo buscando lo que se rompe solo en Windows, y
+aparecieron tres cosas, ya corregidas: la salida se fuerza a UTF-8 (ver abajo),
+las rutas del modelo se arman con `os.path.join` en vez de barras, y el control
+de seguridad al descomprimir compara rutas por componentes y no por texto.
+
+Si lo corres ahi y algo falla igual, abri un issue: es informacion util.
 
 Lo que conviene tener en cuenta:
+
+**Emojis en los nombres.** Windows no escribe la salida en UTF-8 sino en la
+pagina de codigos del sistema, cp1252 en espanol. Mientras se ve en una consola
+no pasa nada, pero en cuanto la salida se redirige a un archivo o a una tuberia
+—que es como la corre un agente— un participante llamado `Fer 🛠️` tumbaba la
+corrida entera con un `UnicodeEncodeError`. Los scripts ahora fuerzan UTF-8 en
+su salida al arrancar. Si ves texto con `?` en lugar de un emoji, es cosmetico:
+el JSON sigue en UTF-8 y esta completo.
 
 **Usa `python`, no `python3`.** En Windows el comando suele ser `python`.
 

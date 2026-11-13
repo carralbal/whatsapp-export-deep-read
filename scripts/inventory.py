@@ -33,6 +33,29 @@ import ffmpeg_tools  # noqa: E402
 from collections import Counter, defaultdict
 from datetime import datetime
 
+def _salida_utf8():
+    """Evita que un emoji en un nombre tumbe la corrida en Windows.
+
+    Windows no usa UTF-8 para la salida estandar: usa la pagina de codigos
+    del sistema, que en espanol es cp1252. Mientras la salida va a una
+    consola de verdad, Python la escribe en Unicode y no pasa nada; pero en
+    cuanto se redirige a un archivo o a una tuberia —que es exactamente como
+    la corre un agente— vuelve a cp1252, y ahi un nombre como "Fer 🛠️"
+    revienta con UnicodeEncodeError y un traceback.
+
+    Un grupo de WhatsApp sin un solo emoji en los nombres es la excepcion,
+    asi que esto no es un caso raro: es el caso normal en Windows.
+    """
+    for flujo in (sys.stdout, sys.stderr):
+        try:
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass          # Python < 3.7 o un flujo que no se puede reconfigurar
+
+
+_salida_utf8()
+
+
 AUDIO_EXT = {".opus", ".ogg", ".m4a", ".mp3", ".aac", ".wav", ".amr"}
 VIDEO_EXT = {".mp4", ".3gp", ".mov", ".avi", ".mkv", ".webm"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".bmp"}

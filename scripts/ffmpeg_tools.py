@@ -55,3 +55,17 @@ def instrucciones() -> str:
         "O el ffmpeg del sistema, que ademas trae ffprobe y es mas completo:\n"
         + sistema
     )
+
+
+if __name__ == "__main__":
+    # Imprime la ruta del ffmpeg utilizable, para los comandos sueltos del
+    # SKILL.md (procesar videos). Hace falta porque cuando el instalador
+    # resuelve ffmpeg con el paquete de pip NO queda ningun `ffmpeg` en el
+    # PATH: escribir `ffmpeg -i video.mp4` falla justo en las maquinas sin
+    # Homebrew, que son las que mas necesitan que esto ande solo.
+    import sys as _sys
+    _ruta = ffprobe() if "--ffprobe" in _sys.argv[1:] else ffmpeg()
+    if not _ruta:
+        print(instrucciones(), file=_sys.stderr)
+        _sys.exit(1)
+    print(_ruta)

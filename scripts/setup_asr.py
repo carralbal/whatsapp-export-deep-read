@@ -34,6 +34,29 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ffmpeg_tools  # noqa: E402
 
+def _salida_utf8():
+    """Evita que un emoji en un nombre tumbe la corrida en Windows.
+
+    Windows no usa UTF-8 para la salida estandar: usa la pagina de codigos
+    del sistema, que en espanol es cp1252. Mientras la salida va a una
+    consola de verdad, Python la escribe en Unicode y no pasa nada; pero en
+    cuanto se redirige a un archivo o a una tuberia —que es exactamente como
+    la corre un agente— vuelve a cp1252, y ahi un nombre como "Fer 🛠️"
+    revienta con UnicodeEncodeError y un traceback.
+
+    Un grupo de WhatsApp sin un solo emoji en los nombres es la excepcion,
+    asi que esto no es un caso raro: es el caso normal en Windows.
+    """
+    for flujo in (sys.stdout, sys.stderr):
+        try:
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass          # Python < 3.7 o un flujo que no se puede reconfigurar
+
+
+_salida_utf8()
+
+
 MODELOS = ("tiny", "base", "small", "medium")
 URL = ("https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/"
        "sherpa-onnx-whisper-{m}.tar.bz2")
@@ -197,7 +220,12 @@ def extraer_seguro(tar_path: Path, destino: Path):
     with tarfile.open(tar_path, "r:bz2") as tf:
         for m in tf.getmembers():
             objetivo = (destino / m.name).resolve()
-            if not str(objetivo).startswith(str(destino)):
+            # Comparar por componentes y no por prefijo de texto: "/datos-malo"
+            # empieza con "/datos" y pasaria un startswith. En Windows, ademas,
+            # la misma carpeta puede venir escrita con otras mayusculas.
+            try:
+                objetivo.relative_to(destino)
+            except ValueError:
                 raise RuntimeError(f"Entrada peligrosa en el tar: {m.name}")
             if m.issym() or m.islnk():
                 raise RuntimeError(f"Enlace no permitido en el tar: {m.name}")

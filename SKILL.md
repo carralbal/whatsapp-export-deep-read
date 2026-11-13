@@ -136,8 +136,13 @@ python <skill>/scripts/setup_asr.py        # instala sherpa-onnx y baja el model
 Después:
 
 ```bash
-python3 <skill>/scripts/transcribe.py <carpeta> --glob '*.opus'
+python3 <skill>/scripts/transcribe.py <carpeta>
 ```
+
+Sin `--glob`, toma todos los audios y videos de la carpeta y saltea lo que no
+sea ni una cosa ni la otra. Con `--glob '*.opus'` se limita a las notas de voz,
+pero entonces **los videos y los audios reenviados (`.m4a`, `.mp3`) quedan sin
+transcribir**, que es justo lo que el documento promete no dejar afuera.
 
 ### Reglas críticas de ejecución
 
@@ -176,13 +181,22 @@ la lectura.
 Un video son dos fuentes de información: la banda de audio y las imágenes.
 Procesar las dos.
 
+**No escribir `ffmpeg` a secas.** Cuando el instalador resolvió ffmpeg con el
+paquete de pip —el caso de cualquier máquina sin Homebrew— no queda ningún
+`ffmpeg` en el PATH y el comando falla. Pedirle la ruta al propio skill:
+
 ```bash
+FF=$(python3 <skill>/scripts/ffmpeg_tools.py)
+
 # audio del video → mismo pipeline de transcripción
-ffmpeg -i video.mp4 -ar 16000 -ac 1 -vn wav/video.wav
+"$FF" -i video.mp4 -ar 16000 -ac 1 -vn wav/video.wav
 
 # fotogramas clave para mirar (1 cada 3 s, más el primero)
-ffmpeg -i video.mp4 -vf "fps=1/3" frames/video_%03d.jpg
+"$FF" -i video.mp4 -vf "fps=1/3" frames/video_%03d.jpg
 ```
+
+La banda de audio ya extraída se transcribe con el mismo script; `transcribe.py`
+también acepta el `.mp4` directamente y le saca el audio solo.
 
 Después mirar los fotogramas con la herramienta de visión y describir qué se ve:
 si es una recorrida por una obra, describir el estado de la obra; si es una

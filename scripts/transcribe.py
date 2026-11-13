@@ -36,9 +36,45 @@ import ffmpeg_tools  # noqa: E402
 
 import numpy as np
 
+def _salida_utf8():
+    """Evita que un emoji en un nombre tumbe la corrida en Windows.
+
+    Windows no usa UTF-8 para la salida estandar: usa la pagina de codigos
+    del sistema, que en espanol es cp1252. Mientras la salida va a una
+    consola de verdad, Python la escribe en Unicode y no pasa nada; pero en
+    cuanto se redirige a un archivo o a una tuberia —que es exactamente como
+    la corre un agente— vuelve a cp1252, y ahi un nombre como "Fer 🛠️"
+    revienta con UnicodeEncodeError y un traceback.
+
+    Un grupo de WhatsApp sin un solo emoji en los nombres es la excepcion,
+    asi que esto no es un caso raro: es el caso normal en Windows.
+    """
+    for flujo in (sys.stdout, sys.stderr):
+        try:
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass          # Python < 3.7 o un flujo que no se puede reconfigurar
+
+
+_salida_utf8()
+
+
 CHUNK_SECONDS = 25     # Whisper trabaja en ventanas de 30 s; 25 deja margen
 OVERLAP_SECONDS = 2    # solape entre bloques, para no cortar palabras
 SR = 16000
+
+# Extensiones que tiene sentido mandarle a ffmpeg. Todo lo demas que haya en la
+# carpeta del export —el _chat.txt, el inventario.json, las fotos, los PDF— no
+# es audio ni video y NO debe reportarse como "archivo ilegible": decir que el
+# _chat.txt no se pudo leer es una alarma falsa sobre el archivo mas importante
+# del export, y ademas ensucia el documento final con huecos inventados.
+MEDIA = (".opus", ".ogg", ".oga", ".m4a", ".mp3", ".aac", ".wav", ".amr",
+         ".flac", ".wma", ".caf", ".aiff", ".aif", ".3gp", ".3gpp",
+         ".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v", ".mpg", ".mpeg")
+
+
+def es_media(nombre: str) -> bool:
+    return os.path.splitext(nombre)[1].lower() in MEDIA
 
 
 def to_wav(src, workdir):
@@ -68,9 +104,35 @@ def unir(partes):
 
     Los bloques se solapan 2 s para no cortar palabras, asi que el final de
     uno y el principio del siguiente dicen lo mismo. Sin esto, cada borde
-    deja una frase repetida en la transcripcion."""
+    deja una frase repetida en la transcripcion.
+
+    El motor no transcribe dos veces igual el mismo audio: en el borde dice
+    "los adjuntos los lee entero" de un lado y "los adjuntos los lee enteros"
+    del otro. Comparar palabra por palabra exige una coincidencia perfecta que
+    casi nunca ocurre, y entonces no corta nada y la frase queda duplicada. Por
+    eso la comparacion es por parecido y no por igualdad, con un umbral mas
+    exigente cuanto mas corto es el tramo: con dos palabras, coincidir no
+    prueba nada.
+    """
+    import difflib
+
     def norm(w):
         return "".join(c for c in w.lower() if c.isalnum())
+
+    def igualitas(x, y):
+        """Dos palabras que el motor escribio distinto pero son la misma."""
+        if x == y:
+            return True
+        return difflib.SequenceMatcher(None, x, y).ratio() >= 0.7
+
+    def parecido(a, b):
+        """Compara posicion por posicion, no por subsecuencia comun.
+
+        Un tramo corrido dos palabras comparte casi las mismas palabras y por
+        subsecuencia puntua alto, asi que el corte se comia texto bueno.
+        Posicion por posicion, el desalineo se nota: el solape verdadero
+        alinea en su largo exacto y el corrido se desploma."""
+        return sum(igualitas(x, y) for x, y in zip(a, b)) / float(len(a))
 
     acc = []
     for parte in partes:
@@ -78,13 +140,25 @@ def unir(partes):
         if not pal:
             continue
         if acc:
-            # el solape mas largo entre la cola de acc y la cabeza de pal
-            maximo = min(len(acc), len(pal), 25)
-            corte = 0
-            for k in range(maximo, 1, -1):
-                if [norm(w) for w in acc[-k:]] == [norm(w) for w in pal[:k]]:
-                    corte = k
-                    break
+            # El solape es de 2 s: en habla rapida son unas 10 palabras. El
+            # tope de 20 evita que un parecido casual se coma texto real.
+            maximo = min(len(acc), len(pal), 20)
+            corte, mejor = 0, 0.0
+            # Se evaluan TODOS los largos y gana el que mejor alinea, no el
+            # primero que pasa: el tramo corrido tambien supera el umbral, y
+            # si se corta ahi desaparecen las palabras que lo desplazaban.
+            for k in range(2, maximo + 1):
+                a = [norm(w) for w in acc[-k:]]
+                b = [norm(w) for w in pal[:k]]
+                if a == b:
+                    puntaje = 1.0
+                elif k < 3:
+                    continue          # con dos palabras, parecerse no prueba nada
+                else:
+                    puntaje = parecido(a, b)
+                umbral = 0.75 if k >= 5 else 0.99
+                if puntaje >= umbral and puntaje >= mejor:
+                    corte, mejor = k, puntaje
             pal = pal[corte:]
         acc += pal
     return " ".join(acc)
@@ -124,7 +198,13 @@ def main():
     paths = []
     for item in args.inputs:
         if os.path.isdir(item):
-            paths += sorted(globmod.glob(os.path.join(item, args.glob or "*")))
+            hallados = sorted(globmod.glob(os.path.join(item, args.glob or "*")))
+            if not args.glob:
+                # Sin --glob, barrer una carpeta de export traia el _chat.txt,
+                # el inventario.json y cada foto, y todos terminaban marcados
+                # como ilegibles. Se filtra por extension de audio y video.
+                hallados = [p for p in hallados if es_media(p)]
+            paths += hallados
         else:
             paths.append(item)
     paths = [p for p in paths if os.path.isfile(p)]
@@ -143,9 +223,10 @@ def main():
         return 1
 
     rec = sherpa_onnx.OfflineRecognizer.from_whisper(
-        encoder=f"{mdir}/{args.model}-encoder.int8.onnx",
-        decoder=f"{mdir}/{args.model}-decoder.int8.onnx",
-        tokens=f"{mdir}/{args.model}-tokens.txt",
+        # os.path.join y no "/": en Windows la barra invertida es la que vale
+        encoder=os.path.join(mdir, f"{args.model}-encoder.int8.onnx"),
+        decoder=os.path.join(mdir, f"{args.model}-decoder.int8.onnx"),
+        tokens=os.path.join(mdir, f"{args.model}-tokens.txt"),
         language=args.lang,
         task="transcribe",
         num_threads=os.cpu_count() or 4,
@@ -166,11 +247,18 @@ def main():
             json.dump(results, f, ensure_ascii=False, indent=1)
         os.replace(tmp, args.out)   # atomico: nunca deja un json a medias
 
-    rotos = []
+    rotos, salteados = [], []
     for src in paths:
         name = os.path.basename(src)
         if name in results:
             print(f"### {name} (ya transcripto, se saltea)")
+            continue
+        if not es_media(name):
+            # Segunda red: aunque llegue nombrado a mano, un archivo que no es
+            # audio ni video se saltea. NUNCA se anota como hueco: el hueco
+            # significa "habia algo que escuchar y no se pudo", y aca no lo hay.
+            print(f"### {name}  no es audio ni video, se saltea\n", flush=True)
+            salteados.append(name)
             continue
         wav = to_wav(src, workdir)
         if wav is None:
@@ -215,6 +303,12 @@ def main():
               f"{'' if len(rotos) == 1 else 's'} como hueco:")
         for r in rotos:
             print(f"      {r}")
+    if salteados:
+        print(f"--- {len(salteados)} archivo{'' if len(salteados) == 1 else 's'} "
+              f"que no {'es' if len(salteados) == 1 else 'son'} audio ni video, "
+              f"salteado{'' if len(salteados) == 1 else 's'} (no son huecos):")
+        for s in salteados:
+            print(f"      {s}")
     return 0
 
 
