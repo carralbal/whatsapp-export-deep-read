@@ -378,6 +378,43 @@ def _fecha(d, mo, y, hh, mm, ss, ampm, orden):
         return None
 
 
+CREACION = re.compile(r"(cre[oó] este grupo|creaste este grupo|created this group"
+                      r"|cre[oó] el grupo)", re.IGNORECASE)
+TE_SUMARON = re.compile(r"(te a[ñn]adió|te agregó|added you|te sum[oó]"
+                        r"|se uni[oó] usando|joined using)", re.IGNORECASE)
+
+
+def estado_del_historial(sistema, senders):
+    """Dice si el export parece traer la conversacion desde el principio.
+
+    Hay una forma silenciosa de perder informacion que no tiene nada que ver
+    con los adjuntos: exportar desde la aplicacion de escritorio cuando el
+    chat no esta cargado entero. Sale un export que parece normal pero al que
+    le falta historial viejo, y nada avisa.
+
+    La senal es simple. Un grupo empieza con el aviso de que alguien lo creo.
+    Si ese aviso no esta, caben dos explicaciones: te sumaron despues —y
+    entonces hay un aviso que lo dice— o el export quedo cortado.
+
+    En un chat de dos personas no hay aviso de creacion, asi que no se puede
+    decir nada: ahi se calla.
+    """
+    textos = [s["texto"] for s in sistema]
+    for s in sistema:
+        if CREACION.search(s["texto"]):
+            return {"estado": "completo", "desde": s["ts"],
+                    "motivo": "el export trae la creacion del grupo"}
+    for s in sistema:
+        if TE_SUMARON.search(s["texto"]):
+            return {"estado": "te_sumaron_despues", "desde": s["ts"],
+                    "motivo": "te sumaron al grupo despues de creado"}
+    if len(senders) < 3:
+        return {"estado": "no_se_puede_saber", "desde": None,
+                "motivo": "chat de dos personas: no hay aviso de creacion"}
+    return {"estado": "posiblemente_incompleto", "desde": None,
+            "motivo": "grupo sin aviso de creacion ni de que te sumaran"}
+
+
 def nombre_real(info) -> str:
     """Recupera el nombre de una entrada del zip.
 
@@ -630,6 +667,7 @@ def main():
         "mensajes_sin_fecha": sin_fecha,
         "participantes": senders.most_common(),
         "mensajes_de_sistema": sistema,
+        "historial": estado_del_historial(sistema, senders),
         "huecos_mayores_14_dias": gaps,
         "adjuntos_mencionados_ausentes": missing,
         "urls": sorted({u for m in messages for u in m["urls"]}),
@@ -652,6 +690,20 @@ def main():
         print(f"Mensajes de sistema: {len(sistema)}  "
               f"(el primero: {sistema[0]['texto'][:60]!r})")
     print(f"Rango: {report['rango']['desde']} -> {report['rango']['hasta']}")
+    hist = report.get("historial")
+    if hist and hist["estado"] == "posiblemente_incompleto":
+        print("\nAVISO: puede faltar historial al principio.")
+        print("  El export no trae el aviso de creacion del grupo ni uno que")
+        print("  diga que te sumaron despues, asi que el chat deberia empezar")
+        print(f"  en su primer mensaje y empieza en {report['rango']['desde'][:10]}.")
+        print("  Exportando desde la aplicacion de escritorio esto pasa cuando")
+        print("  el chat no estaba cargado entero. El export desde el telefono")
+        print("  trae el historial completo.")
+        print("  Si sabes que el grupo es mas viejo, volve a exportar desde el")
+        print("  telefono. Si no, seguir: el documento lo deja declarado.\n")
+    elif hist and hist["estado"] == "te_sumaron_despues":
+        print(f"  (te sumaron al grupo el {hist['desde'][:10]}: lo anterior "
+              f"no esta en tu WhatsApp)")
     print(f"Archivos: {t['archivos']}  {t['por_tipo']}")
     print(f"Audio: {t['audio_segundos']} s   Video: {t['video_segundos']} s"
           f"   Paginas PDF: {t['paginas_pdf']}")

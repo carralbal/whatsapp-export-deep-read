@@ -164,9 +164,9 @@ ningún asistente escucha un `.opus` sin el motor local.
 
 ## Requisitos
 
-- **WhatsApp en el teléfono.** El export sale de ahí, no de la computadora.
-- **Una forma de pasar el archivo del teléfono a la computadora**: AirDrop,
-  cable, Drive o similar. Con adjuntos pesa megas, a veces cientos.
+- **WhatsApp donde vayas a exportar**: el teléfono, o la aplicación de
+  escritorio. Si exportás del teléfono, además **una forma de pasar el archivo**
+  —AirDrop, cable, Drive—, porque con adjuntos pesa megas, a veces cientos.
 - **Python 3.8 o más nuevo.** macOS y la mayoría de los Linux ya lo traen. En
   Windows: `winget install Python.Python.3.12`
 - **Un asistente que pueda ejecutar scripts y leer archivos de tu máquina**:
@@ -191,17 +191,40 @@ el reporte.
 
 ## Uso
 
-**1. Exportá el grupo con los archivos, desde el teléfono.**
+**1. Exportá el grupo con los archivos.**
 
-**El export sale del celular, no de la computadora.** Abrí el grupo en la app
-de WhatsApp del teléfono y buscá **Exportar chat**:
+Hay **dos caminos que funcionan**, y la elección no es menor: un export con
+adjuntos pesa megas, a veces cientos.
+
+**a) Desde el teléfono.** Es el que trae el historial completo, siempre.
 
 - **iPhone:** tocá el nombre del grupo arriba → bajá hasta **Exportar chat**.
 - **Android:** los tres puntos ⋮ arriba a la derecha → **Más** → **Exportar
   chat**.
 
-Te va a preguntar si incluís los archivos: **decí que sí.** Según la versión el
-botón dice *Adjuntar archivos*, *Incluir archivos* o *Con multimedia*.
+Después hay que pasar el archivo a la computadora (paso 2).
+
+**b) Desde la aplicación de WhatsApp de escritorio.** Más cómodo, porque el
+`.zip` cae directo en Descargas y te ahorrás mover cientos de megas. Pero tiene
+una trampa:
+
+> **El escritorio no siempre tiene el chat cargado entero**, y entonces
+> **exporta solo una parte del historial**. El archivo sale con buena pinta y
+> nada te avisa de lo que falta.
+>
+> El inventario lo detecta: si el export no trae el aviso de creación del
+> grupo, te lo dice y te sugiere rehacerlo desde el teléfono. Pero más vale
+> saberlo antes.
+>
+> Si el grupo es largo o te importa el historial viejo, **exportá desde el
+> teléfono**.
+
+**c) ¿Y WhatsApp Web?** No lo probamos y no sabemos si exporta. Si lo intentás,
+contalo en un issue.
+
+En cualquiera de los caminos, te va a preguntar si incluís los archivos:
+**decí que sí.** Según la versión el botón dice *Adjuntar archivos*, *Incluir
+archivos* o *Con multimedia*.
 
 > Este es el paso donde más gente se equivoca, y no avisa. Si no te preguntó
 > nada, o si el archivo que te quedó pesa unos pocos kilobytes, exportaste **sin
@@ -215,10 +238,11 @@ exporta y otras que dicen que no, ninguna con una prueba seria detrás, y no lo
 verificamos. Lo que sí está probado es el camino del teléfono. Si lo intentás
 desde la computadora y funciona, contalo en un issue.
 
-**2. Pasá el archivo del teléfono a la computadora.**
+**2. Pasá el archivo a la computadora** *(si exportaste desde el teléfono).*
 
 Es el paso que nadie documenta y donde se traba todo el mundo, porque un export
-con adjuntos puede pesar cientos de megas: no entra en un mail.
+con adjuntos puede pesar cientos de megas: no entra en un mail. Si exportaste
+desde la aplicación de escritorio, saltealo: ya está en Descargas.
 
 Al terminar de exportar, el teléfono te ofrece **compartir** el `.zip`. De ahí:
 

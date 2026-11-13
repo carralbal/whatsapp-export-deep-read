@@ -29,6 +29,18 @@ que nadie volvió a escuchar y en los adjuntos. Un resumen que solo lee
 
 Cada etapa alimenta a la siguiente. No saltear ninguna.
 
+**0. Mirar si el export está entero.** El inventario avisa dos cosas antes de
+procesar nada, y las dos son pérdidas silenciosas:
+
+- **Export sin los archivos.** Corta solo. No insistir: pedirle a la persona
+  que vuelva a exportar incluyendo los adjuntos.
+- **Historial recortado.** Si es un grupo y el export no trae el aviso de
+  creación ni uno de que sumaron a la persona después, puede faltar
+  conversación vieja. Pasa al exportar desde la aplicación de escritorio con el
+  chat sin cargar entero. **Decírselo** y ofrecer rehacerlo desde el teléfono,
+  que siempre trae todo. Si se sigue igual, el documento lo declara en la
+  sección de cobertura.
+
 **1. Inventariar.** Correr `python scripts/inventory.py <ruta al .zip o a la
 carpeta>`. Devuelve cantidad de mensajes, formato del export (iPhone o Android),
 participantes, archivos por tipo, duración total de audio y video, duplicados

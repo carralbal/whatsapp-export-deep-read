@@ -30,6 +30,28 @@ pedirle a la persona que vuelva a exportar incluyendo los archivos, y explicarle
 cómo. El `--solo-texto` existe solo para cuando la persona, ya avisada, dice
 explícitamente que quiere seguir igual.
 
+**1 bis. ¿El export trae el historial completo?**
+Hay una segunda forma de perder información en silencio, distinta de los
+adjuntos: **exportar desde la aplicación de escritorio con el chat sin cargar
+entero**. Sale un export que parece normal y al que le falta conversación
+vieja, sin que nada avise.
+
+El inventario lo marca en `reporte.historial`. Si el estado es
+`posiblemente_incompleto` —un grupo sin aviso de creación y sin uno de que
+sumaron a la persona después—, **decírselo antes de procesar**:
+
+> Este export arranca el <fecha> y no trae el aviso de creación del grupo, así
+> que puede faltarte conversación anterior. Suele pasar al exportar desde la
+> aplicación de escritorio. Si el grupo es más viejo que eso, conviene volver a
+> exportarlo desde el teléfono, que trae el historial completo. ¿Seguimos con
+> este o lo rehacés?
+
+Si la persona decide seguir, **el documento lo declara en la cobertura**: no se
+puede prometer que se leyó todo cuando falta el principio.
+
+En un chat de dos personas no hay aviso de creación y el estado es
+`no_se_puede_saber`: ahí no hay nada que decir.
+
 **2. ¿Esto corre en la máquina de la persona?**
 El motor de transcripción se instala y corre localmente. Si el entorno no puede
 instalar desde PyPI —error 403, "host not in allowlist", sin salida a internet—
