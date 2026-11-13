@@ -17,8 +17,8 @@ subís uno por uno, corré los scripts vos a mano (ver `README.md`) y pasale el
 
 ## Objetivo
 
-Leer un export de WhatsApp al 100% y producir **un solo archivo Markdown** que
-sirva como memoria permanente de esa conversación.
+Leer un export de WhatsApp al 100% y producir **dos archivos Markdown** —un resumen
+y un documento completo— que sirvan como memoria permanente de esa conversación.
 
 La regla que ordena todo: **ningún byte del export queda sin leer.** La mayor
 parte de lo que se habló no está en el texto del chat, está en las notas de voz

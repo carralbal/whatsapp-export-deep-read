@@ -1,6 +1,6 @@
 ---
 name: whatsapp-export-deep-read
-description: 'Lee al 100% un export de WhatsApp (el .zip o la carpeta con _chat.txt y adjuntos) y produce un unico .md exhaustivo con TODO procesado: mensajes de texto integros, audios y notas de voz transcriptos, videos vistos y transcriptos, PDF, Word, Excel, CSV y demas documentos leidos, imagenes analizadas visualmente, links relevados, mas sintesis, datos duros, inconsistencias y puntos abiertos. Usala SIEMPRE que se suba o mencione un export, backup, chat exportado o historial de WhatsApp (grupo o individual) y se pida leerlo, procesarlo, transcribirlo, resumirlo, analizarlo, extraer el conocimiento, pasarlo a un md, entender todo lo que paso ahi, o armar una base de conocimiento, minuta o informe a partir de el. Vale aunque el pedido venga casual (mira este chat y contame todo, transcribi los audios de este grupo) y aunque no se nombre la palabra export. NO la uses para chats pegados como texto plano sin adjuntos, ni para exports de Slack, Telegram o email.'
+description: 'Lee al 100% un export de WhatsApp (el .zip o la carpeta con _chat.txt y adjuntos) y produce dos .md: un resumen ejecutivo y un documento completo con TODO procesado: mensajes de texto integros, audios y notas de voz transcriptos, videos vistos y transcriptos, PDF, Word, Excel, CSV y demas documentos leidos, imagenes analizadas visualmente, links relevados, mas sintesis, datos duros, inconsistencias y puntos abiertos. Usala SIEMPRE que se suba o mencione un export, backup, chat exportado o historial de WhatsApp (grupo o individual) y se pida leerlo, procesarlo, transcribirlo, resumirlo, analizarlo, extraer el conocimiento, pasarlo a un md, entender todo lo que paso ahi, o armar una base de conocimiento, minuta o informe a partir de el. Vale aunque el pedido venga casual (mira este chat y contame todo, transcribi los audios de este grupo) y aunque no se nombre la palabra export. NO la uses para chats pegados como texto plano sin adjuntos, ni para exports de Slack, Telegram o email.'
 ---
 
 # WhatsApp Export → Documento de conocimiento total
@@ -10,8 +10,9 @@ mezcla texto, notas de voz, fotos, planos, PDF, planillas y videos, y el 70% del
 conocimiento real suele estar en los adjuntos, no en el texto. Un resumen que
 solo lee `_chat.txt` es un resumen que perdió lo importante.
 
-El entregable es **un solo archivo .md** que sirve como base de conocimiento
-permanente del proyecto o de la conversación.
+El entregable son **dos archivos .md**: un resumen de dos páginas con lo que la
+persona quería saber, y un documento completo, mensaje por mensaje, que sirve
+como base de conocimiento permanente del proyecto o de la conversación.
 
 ---
 

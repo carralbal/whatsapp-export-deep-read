@@ -1,7 +1,8 @@
 # whatsapp-export-deep-read
 
-Lee **todo** un export de WhatsApp —no solo el texto— y lo convierte en un único
-archivo Markdown que sirve como memoria permanente de esa conversación.
+Lee **todo** un export de WhatsApp —no solo el texto— y lo convierte en dos
+archivos Markdown: un resumen de dos páginas y un documento completo que sirve
+como memoria permanente de esa conversación.
 
 Transcribe los audios. Mira los videos. Lee los PDF, los Word, los Excel y los CSV.
 Analiza las imágenes una por una. Releva los links. Y arma una línea de tiempo
