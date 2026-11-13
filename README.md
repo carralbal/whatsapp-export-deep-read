@@ -164,6 +164,9 @@ ningún asistente escucha un `.opus` sin el motor local.
 
 ## Requisitos
 
+- **WhatsApp en el teléfono.** El export sale de ahí, no de la computadora.
+- **Una forma de pasar el archivo del teléfono a la computadora**: AirDrop,
+  cable, Drive o similar. Con adjuntos pesa megas, a veces cientos.
 - **Python 3.8 o más nuevo.** macOS y la mayoría de los Linux ya lo traen. En
   Windows: `winget install Python.Python.3.12`
 - **Un asistente que pueda ejecutar scripts y leer archivos de tu máquina**:
@@ -188,10 +191,17 @@ el reporte.
 
 ## Uso
 
-**1. Exportá el grupo con los archivos.** En WhatsApp: abrí el grupo → buscá
-**Exportar chat**. Te va a preguntar si incluís los archivos: **decí que sí.**
-Según la versión el botón dice *Adjuntar archivos*, *Incluir archivos* o *Con
-multimedia*.
+**1. Exportá el grupo con los archivos, desde el teléfono.**
+
+**El export sale del celular, no de la computadora.** Abrí el grupo en la app
+de WhatsApp del teléfono y buscá **Exportar chat**:
+
+- **iPhone:** tocá el nombre del grupo arriba → bajá hasta **Exportar chat**.
+- **Android:** los tres puntos ⋮ arriba a la derecha → **Más** → **Exportar
+  chat**.
+
+Te va a preguntar si incluís los archivos: **decí que sí.** Según la versión el
+botón dice *Adjuntar archivos*, *Incluir archivos* o *Con multimedia*.
 
 > Este es el paso donde más gente se equivoca, y no avisa. Si no te preguntó
 > nada, o si el archivo que te quedó pesa unos pocos kilobytes, exportaste **sin
@@ -200,7 +210,29 @@ multimedia*.
 >
 > Si igual se te pasa, el inventario lo detecta y frena antes de procesar.
 
-**2. Dejá el `.zip` en una carpeta** a la que tu asistente tenga acceso.
+**¿Y la app de WhatsApp de escritorio?** No lo sabemos. Hay guías que dicen que
+exporta y otras que dicen que no, ninguna con una prueba seria detrás, y no lo
+verificamos. Lo que sí está probado es el camino del teléfono. Si lo intentás
+desde la computadora y funciona, contalo en un issue.
+
+**2. Pasá el archivo del teléfono a la computadora.**
+
+Es el paso que nadie documenta y donde se traba todo el mundo, porque un export
+con adjuntos puede pesar cientos de megas: no entra en un mail.
+
+Al terminar de exportar, el teléfono te ofrece **compartir** el `.zip`. De ahí:
+
+- **iPhone → Mac:** AirDrop es lo más rápido. Si no, *Guardar en Archivos* y
+  después iCloud Drive.
+- **iPhone → Windows:** guardalo en Archivos y subilo a Drive, Dropbox o
+  OneDrive, o pasalo por cable.
+- **Android → cualquiera:** compartilo a Drive, o conectá el teléfono por cable
+  y copialo a mano.
+- **Si el grupo es chico** (sin videos, pocos megas), mandártelo por mail a vos
+  mismo alcanza.
+
+Dejá el `.zip` en una carpeta a la que tu asistente tenga acceso. No hace falta
+descomprimirlo: los scripts lo abren solos.
 
 **3. Pedile que lo lea**, desde la aplicación de escritorio corriendo en tu
 computadora.
