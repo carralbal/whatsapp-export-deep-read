@@ -24,6 +24,8 @@ import hashlib
 import json
 import os
 import re
+import shutil
+import unicodedata
 import subprocess
 import sys
 import zipfile
@@ -376,6 +378,51 @@ def _fecha(d, mo, y, hh, mm, ss, ampm, orden):
         return None
 
 
+def nombre_real(info) -> str:
+    """Recupera el nombre de una entrada del zip.
+
+    WhatsApp guarda los nombres en UTF-8 pero NO prende la bandera que lo
+    declara (bit 0x800). Ante esa ausencia, zipfile cumple el estandar y los
+    lee como CP437, la tabla de MS-DOS. Resultado: "presentacion.pdf" con
+    tilde sale del zip como "presentacio╠un.pdf".
+
+    Eso rompe dos cosas a la vez: los archivos quedan en el disco con el
+    nombre arruinado, y el chat —que los nombra bien— los reporta como
+    ausentes: el documento final anuncia huecos que no existen.
+
+    Se reinterpretan los bytes como UTF-8. Si no lo son, el nombre se deja
+    como vino: un zip hecho de verdad en CP437 sigue funcionando.
+    """
+    nombre = info.filename
+    if info.flag_bits & 0x800:
+        return nombre
+    try:
+        return nombre.encode("cp437").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return nombre
+
+
+def _extraer(z, destino):
+    """Descomprime arreglando los nombres y sin dejar escapar rutas."""
+    destino = os.path.abspath(destino)
+    for info in z.infolist():
+        nombre = nombre_real(info)
+        # nada de rutas absolutas ni de ".." que se escapen del destino
+        partes = [p for p in nombre.replace("\\", "/").split("/")
+                  if p not in ("", ".", "..")]
+        if not partes:
+            continue
+        ruta = os.path.join(destino, *partes)
+        if not os.path.abspath(ruta).startswith(destino + os.sep):
+            continue
+        if info.is_dir():
+            os.makedirs(ruta, exist_ok=True)
+            continue
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+        with z.open(info) as origen, open(ruta, "wb") as f:
+            shutil.copyfileobj(origen, f)
+
+
 def parse_chat(path):
     # utf-8-sig: si el .txt paso por Notepad o Excel queda con BOM, y sin
     # esto el primer mensaje no matchea y se pierde sin aviso.
@@ -449,7 +496,7 @@ def main():
         os.makedirs(folder, exist_ok=True)
         try:
             with zipfile.ZipFile(entrada) as z:
-                z.extractall(folder)
+                _extraer(z, folder)
         except zipfile.BadZipFile:
             print(f"ERROR: {os.path.basename(entrada)} no es un .zip valido.\n"
                   "  Puede haberse cortado la descarga o la transferencia.\n"
@@ -539,7 +586,13 @@ def main():
     mentioned = []
     for m in messages:
         mentioned += m["attachments"]
-    missing = sorted({a for a in mentioned if a not in present})
+    # Comparar normalizando: macOS guarda los acentos descompuestos (NFD) en
+    # los nombres de archivo y WhatsApp los escribe compuestos (NFC) adentro
+    # del chat. Sin esto, "presentación.pdf" existe en el disco y el informe
+    # lo declara ausente igual.
+    presente_norm = {unicodedata.normalize("NFC", p) for p in present}
+    missing = sorted({a for a in mentioned
+                      if unicodedata.normalize("NFC", a) not in presente_norm})
 
     dts = [m["_dt"] for m in messages if m["_dt"]]
     gaps = []
