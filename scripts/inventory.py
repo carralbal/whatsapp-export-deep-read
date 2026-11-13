@@ -106,6 +106,39 @@ SYS_RE_ANDROID = re.compile(
 
 URL_RE = re.compile(r"https?://[^\s]+")
 
+# Avisos del sistema que SI traen remitente.
+#
+# "Se elimino este mensaje" NO entra aca a proposito: no es un aviso sobre el
+# grupo, es el hueco que dejo un mensaje que alguien mando y despues borro.
+# Que una persona haya escrito algo a tal hora y lo haya retirado es
+# informacion de la conversacion, y se pierde si se lo saca del conteo.
+SYS_FRASES = re.compile(
+    r"(cifrad[oa]s de extremo a extremo|end-to-end encrypted"
+    r"|cre[oó] este grupo|creaste este grupo|created this group"
+    r"|a[ñn]adi[oó] a |agreg[oó] a | added |te a[ñn]adi[oó]"
+    r"|sali[oó] del grupo| left$|se uni[oó] usando|joined using"
+    r"|cambi[oó] el nombre del grupo|cambi[oó] el asunto|changed the subject"
+    r"|cambi[oó] la imagen|changed this group's icon"
+    r"|ahora es administrador|is now an admin"
+    r"|cambi[oó] su n[uú]mero|changed their phone number)",
+    re.IGNORECASE)
+
+
+def es_de_sistema(body: str) -> bool:
+    """Un aviso del sistema, aunque la linea traiga remitente.
+
+    No se puede usar la marca invisible U+200E como senal: `normalizar()` ya
+    la saco cuando esto corre. Queda la frase, y para no confundir un aviso
+    con alguien que escribe "Juan salio del grupo" en una charla, se exige
+    ademas que sea corto: los avisos de WhatsApp son de una linea.
+    """
+    t = (body or "").replace("‎", "").strip()
+    if not t or len(t) > 220:
+        return False
+    if t.startswith("<adjunto:") or t.startswith("<attached:"):
+        return False
+    return bool(SYS_FRASES.search(t))
+
 # La falla mas comun y la mas silenciosa: exportar SIN los archivos.
 # WhatsApp no deja el nombre del adjunto sino una marca de omision, distinta
 # segun el sistema y el idioma:
@@ -355,6 +388,17 @@ def parse_chat(path):
         if m:
             d, mo, y, hh, mm, ss, ampm, sender, body = m.groups()
             ts = _fecha(d, mo, y, hh, mm, ss, ampm, orden)
+            if es_de_sistema(body):
+                # Algunos exports ponen remitente en los avisos del sistema:
+                # el nombre del grupo en los de cifrado y creacion, o la
+                # persona en los de "X anadio a Y". Sin esto, el grupo entra
+                # a la lista de participantes como si fuera una persona, y el
+                # SKILL.md se queda sin los avisos que pide para fechar la
+                # creacion.
+                sistema.append({"ts": ts.isoformat() if ts else None,
+                                "texto": body.replace("‎", "").strip(),
+                                "atribuido_a": sender.strip()})
+                continue
             messages.append({
                 "ts": ts.isoformat() if ts else None,
                 "_dt": ts,

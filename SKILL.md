@@ -96,6 +96,11 @@ Cosas que importan acá:
   esas menciones es un hueco que va listado en el documento final.
 - **Duración total de audio y cantidad de páginas de PDF**, para dimensionar el
   trabajo antes de empezar.
+- **Un `.zip` adentro del export.** Pasa cuando alguien reenvía al grupo otro
+  chat exportado. El inventario lo lista como `otro`. No se procesa solo:
+  decidir con la persona si entra —es un chat completo, con sus propios
+  adjuntos— y, si entra, correrle el skill aparte. Lo que no corresponde es
+  ignorarlo en silencio: listarlo siempre en la sección de cobertura.
 
 ---
 
@@ -144,6 +149,39 @@ Sin `--glob`, toma todos los audios y videos de la carpeta y saltea lo que no
 sea ni una cosa ni la otra. Con `--glob '*.opus'` se limita a las notas de voz,
 pero entonces **los videos y los audios reenviados (`.m4a`, `.mp3`) quedan sin
 transcribir**, que es justo lo que el documento promete no dejar afuera.
+
+### Volver a correrlo sobre un export nuevo del mismo chat
+
+Es el caso normal: el grupo sigue hablando y la persona exporta de nuevo a la
+semana. **No hay que retranscribir lo que ya se transcribió.**
+
+`transcribe.py` guarda cada resultado en el JSON de salida y **saltea todo lo
+que ya esté ahí**. Y los nombres de archivo de WhatsApp son estables entre
+exports: en una prueba contra dos exports reales del mismo grupo, separados por
+cinco semanas, **los 46 archivos del viejo aparecían con el nombre idéntico en
+el nuevo**, sin un solo renombrado.
+
+Para que eso sirva hay que trabajar siempre en la misma carpeta:
+
+```bash
+# descomprimir el export nuevo ENCIMA de la carpeta de trabajo de siempre
+unzip -o "export-nuevo.zip" -d <carpeta-de-trabajo>
+python3 <skill>/scripts/inventory.py <carpeta-de-trabajo>
+python3 <skill>/scripts/transcribe.py <carpeta-de-trabajo>   # solo lo nuevo
+```
+
+Si en cambio se descomprime en una carpeta nueva, no encuentra el JSON viejo y
+**vuelve a transcribir todo**. En un grupo con mucho audio eso puede ser
+media hora de cómputo tirada.
+
+Lo que **no** es incremental y hay que asumir en cada corrida:
+
+- El inventario se rehace entero. Es barato: 20.000 mensajes en 0,3 s.
+- Las imágenes y los videos se vuelven a mirar.
+- **Los dos documentos se reescriben de cero.** Si el anterior tenía
+  correcciones hechas a mano, hay que volver a aplicarlas. Conviene guardar el
+  anterior antes de sobrescribirlo y, al escribir el nuevo, marcar en la línea
+  de tiempo desde dónde empieza lo que no estaba en la corrida pasada.
 
 ### Reglas críticas de ejecución
 

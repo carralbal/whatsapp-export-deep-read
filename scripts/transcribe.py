@@ -78,6 +78,13 @@ def es_media(nombre: str) -> bool:
 
 
 def to_wav(src, workdir):
+    """Devuelve (ruta_wav, motivo). Si no hay wav, motivo dice por que.
+
+    Distinguir el motivo importa: un GIF no tiene pista de audio y esta
+    perfectamente sano, pero decir de el "archivo vacio o truncado" es una
+    acusacion falsa que ademas mete un hueco inventado en el documento. En un
+    grupo de WhatsApp los GIF son moneda corriente.
+    """
     exe = ffmpeg_tools.ffmpeg()
     if exe is None:
         raise SystemExit(ffmpeg_tools.instrucciones())
@@ -95,8 +102,21 @@ def to_wav(src, workdir):
             capture_output=True)
         if r.returncode != 0 or not os.path.exists(dst) \
                 or os.path.getsize(dst) == 0:
-            return None
-    return dst
+            err = (r.stderr or b"").decode("utf-8", "replace").lower()
+            if "does not contain any stream" in err or \
+                    "output file #0 does not contain" in err or \
+                    "no audio" in err:
+                return None, "sin_audio"
+            # ffmpeg abrio el archivo y leyo su cabecera? entonces el archivo
+            # esta sano y lo unico que falta es la pista de audio.
+            if r.returncode == 0 or "invalid data" not in err:
+                sano = subprocess.run(
+                    [exe, "-v", "error", "-i", src, "-f", "null", "-"],
+                    capture_output=True)
+                if sano.returncode == 0:
+                    return None, "sin_audio"
+            return None, "roto"
+    return dst, None
 
 
 def unir(partes):
@@ -161,7 +181,42 @@ def unir(partes):
                     corte, mejor = k, puntaje
             pal = pal[corte:]
         acc += pal
-    return " ".join(acc)
+    return recortar_bucles(" ".join(acc))
+
+
+def recortar_bucles(texto, minimo=5):
+    """Corta las rachas donde el motor repite una palabra en loop.
+
+    Whisper se traba: ante silencio, ruido de fondo o el final del audio,
+    entrega la misma palabra decenas de veces seguidas.
+
+    Eso no es algo que alguien dijo: es texto inventado por el motor. Dejarlo
+    pasar pone en boca de una persona lo que nunca dijo, y lo pone entre
+    comillas en el documento. Se recorta a dos y se marca, para que el que lee
+    sepa que ahi hubo un tramo que el motor no pudo resolver.
+    """
+    pal = texto.split()
+    if not pal:
+        return texto
+    out, i = [], 0
+    while i < len(pal):
+        j = i
+        while j + 1 < len(pal) and norm_pal(pal[j + 1]) == norm_pal(pal[i]) \
+                and norm_pal(pal[i]):
+            j += 1
+        racha = j - i + 1
+        if racha >= minimo:
+            out += [pal[i], pal[i],
+                    f"[el motor repitio esta palabra {racha} veces seguidas; "
+                    f"tramo no resuelto]"]
+        else:
+            out += pal[i:j + 1]
+        i = j + 1
+    return " ".join(out)
+
+
+def norm_pal(w):
+    return "".join(c for c in w.lower() if c.isalnum())
 
 
 def read_wave(path):
@@ -183,6 +238,42 @@ def duration(path):
         return None
 
 
+CON_VALOR = {"--glob", "--model", "--lang", "--out", "--model-dir"}
+
+
+def ordenar_argumentos(argv):
+    """Separa opciones de rutas y mete un `--` en el medio.
+
+    WhatsApp exporta archivos cuyo nombre empieza con guion
+    (`-0000010-AUDIO-2026-09-25.opus`). argparse los toma por opciones y la
+    corrida muere con "the following arguments are required: inputs" antes de
+    transcribir nada, y rompe justo el comando por lotes que documenta el
+    SKILL.md.
+
+    Pasar las rutas despues de `--` lo resuelve, pero no se le puede pedir a
+    quien usa el skill que se acuerde: lo arregla el script.
+    """
+    opciones, rutas, i = [], [], 0
+    while i < len(argv):
+        a = argv[i]
+        if a == "--":
+            rutas += argv[i + 1:]
+            break
+        if a in ("-h", "--help"):
+            opciones.append(a)
+            i += 1
+        elif a in CON_VALOR:
+            opciones += argv[i:i + 2]
+            i += 2
+        elif a.startswith("--"):
+            opciones.append(a)
+            i += 1
+        else:
+            rutas.append(a)      # todo lo demas es una ruta, empiece como empiece
+            i += 1
+    return opciones + (["--"] + rutas if rutas else [])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("inputs", nargs="+")
@@ -191,7 +282,7 @@ def main():
     ap.add_argument("--lang", default="es")
     ap.add_argument("--out", default="transcripciones.json")
     ap.add_argument("--model-dir", default=None)
-    args = ap.parse_args()
+    args = ap.parse_args(ordenar_argumentos(sys.argv[1:]))
 
     import sherpa_onnx  # importar despues de parsear, para que --help sea rapido
 
@@ -247,7 +338,7 @@ def main():
             json.dump(results, f, ensure_ascii=False, indent=1)
         os.replace(tmp, args.out)   # atomico: nunca deja un json a medias
 
-    rotos, salteados = [], []
+    rotos, salteados, sin_audio = [], [], []
     for src in paths:
         name = os.path.basename(src)
         if name in results:
@@ -260,7 +351,21 @@ def main():
             print(f"### {name}  no es audio ni video, se saltea\n", flush=True)
             salteados.append(name)
             continue
-        wav = to_wav(src, workdir)
+        wav, motivo = to_wav(src, workdir)
+        if wav is None and motivo == "sin_audio":
+            # Un GIF, o un video mudo. El archivo esta sano: no hay nada que
+            # transcribir y NO es un hueco. Las imagenes las mira la etapa 6.
+            sin_audio.append(name)
+            results[name] = {"duracion_s": None, "texto": None,
+                             "sin_audio": True,
+                             "nota": "el archivo no tiene pista de audio "
+                                     "(GIF o video mudo): no hay nada que "
+                                     "transcribir. Las imagenes se miran aparte."}
+            guardar()
+            print(f"### {name}  sin pista de audio (GIF o video mudo).")
+            print("    No es un hueco: hay que MIRARLO en la etapa de "
+                  "imagenes.\n", flush=True)
+            continue
         if wav is None:
             rotos.append(name)
             results[name] = {"duracion_s": None, "texto": None,
@@ -303,6 +408,12 @@ def main():
               f"{'' if len(rotos) == 1 else 's'} como hueco:")
         for r in rotos:
             print(f"      {r}")
+    if sin_audio:
+        print(f"--- {len(sin_audio)} archivo{'' if len(sin_audio) == 1 else 's'} "
+              f"sin pista de audio (GIF o video mudo). NO son huecos: "
+              f"hay que mirarlos:")
+        for a in sin_audio:
+            print(f"      {a}")
     if salteados:
         print(f"--- {len(salteados)} archivo{'' if len(salteados) == 1 else 's'} "
               f"que no {'es' if len(salteados) == 1 else 'son'} audio ni video, "
