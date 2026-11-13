@@ -115,7 +115,11 @@ URL_RE = re.compile(r"https?://[^\s]+")
 SYS_FRASES = re.compile(
     r"(cifrad[oa]s de extremo a extremo|end-to-end encrypted"
     r"|cre[oó] este grupo|creaste este grupo|created this group"
-    r"|a[ñn]adi[oó] a |agreg[oó] a | added |te a[ñn]adi[oó]"
+    # con tilde a proposito: "X anadio a Y" es el aviso del sistema, en
+    # tercera persona. "te agrego a este grupo", sin tilde, es una persona
+    # escribiendo en primera. Sin esa distincion, el mensaje de alguien se
+    # clasifica como aviso y desaparece del conteo y de la linea de tiempo.
+    r"|a[ñn]adió a |agregó a | added |te a[ñn]adió|te agregó"
     r"|sali[oó] del grupo| left$|se uni[oó] usando|joined using"
     r"|cambi[oó] el nombre del grupo|cambi[oó] el asunto|changed the subject"
     r"|cambi[oó] la imagen|changed this group's icon"
