@@ -213,9 +213,17 @@ Si querés correr las piezas a mano:
 python scripts/inventory.py /ruta/al/export.zip
 
 # transcripción (siempre en primer plano, nunca con & ni nohup)
-python scripts/transcribe.py /ruta/a/la/carpeta --glob "*.opus"
-python scripts/transcribe.py video.mp4
+python scripts/transcribe.py /ruta/a/la/carpeta
 ```
+
+Sin `--glob` toma **todos** los audios y los videos de la carpeta, y saltea lo
+que no es ni una cosa ni la otra. Si lo limitás con `--glob "*.opus"` te quedan
+afuera los videos y los audios reenviados (`.m4a`, `.mp3`), que es justo lo que
+este proyecto promete no dejar afuera.
+
+Si volvés a exportar el mismo grupo más adelante, descomprimí el export nuevo
+**encima de la misma carpeta**: el script saltea lo que ya transcribió y hace
+solo lo nuevo.
 
 ---
 
