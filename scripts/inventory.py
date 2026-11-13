@@ -69,6 +69,18 @@ ATTACH_RE = re.compile(r"<(?:adjunto|attached|archivo adjunto):\s*([^>]+)>")
 ATTACH_RE_ANDROID = re.compile(
     r"^\u200e?([\w\-. ()]+\.[A-Za-z0-9]{2,5})\s*\((?:archivo adjunto|file attached)\)"
 )
+# Los mensajes de sistema (cifrado, "Fulano creo el grupo", "te anadio")
+# tienen fecha pero NO remitente. Sin una regex propia no matchean, y el
+# "elif messages" de parse_chat los pegaba al mensaje anterior, inflandolo
+# con texto que no es suyo. Ahora se guardan aparte: el SKILL.md los pide
+# para fechar la creacion del grupo y saber quien lo creo.
+SYS_RE_IOS = re.compile(
+    r"^\u200e?\[(\d{1,2})/(\d{1,2})/(\d{2,4}),\s(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([apAP]\.?\s*[mM]\.?)?\s*\]\s\u200e?(.*)$"
+)
+SYS_RE_ANDROID = re.compile(
+    r"^\u200e?(\d{1,2})/(\d{1,2})/(\d{2,4}),\s(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([apAP]\.?\s*[mM]\.?)?\s*[-\u2013]\s(.*)$"
+)
+
 URL_RE = re.compile(r"https?://[^\s]+")
 
 # La falla mas comun y la mas silenciosa: exportar SIN los archivos.
@@ -85,8 +97,18 @@ OMITIDO_RE = re.compile(
 
 
 def contar_omitidos(messages) -> int:
-    """Cuantos mensajes son una marca de 'archivo omitido'."""
-    return sum(1 for m in messages if OMITIDO_RE.match(m.get("text", "") or ""))
+    """Cuantos mensajes son una marca de 'archivo omitido'.
+
+    Se mira LINEA POR LINEA, no el texto entero: si el mensaje quedo
+    multilinea, un OMITIDO_RE anclado con ^...$ contra todo el texto no
+    matchea y la puerta de 'export sin archivos' no se dispara nunca.
+    Es justo la falla que esa puerta existe para evitar."""
+    n = 0
+    for m in messages:
+        texto = m.get("text", "") or ""
+        if any(OMITIDO_RE.match(l) for l in texto.split("\n")):
+            n += 1
+    return n
 
 
 def frase_omitidos(n: int) -> str:
@@ -195,17 +217,48 @@ def kind(ext):
     return "otro"
 
 
+def _lineas_de_mensaje(path):
+    """Cuantas lineas del archivo parecen un mensaje de WhatsApp."""
+    try:
+        with open(path, encoding="utf-8-sig", errors="replace") as f:
+            raw = normalizar(f.read())
+    except Exception:
+        return 0
+    ls = raw.split("\n")[:400]
+    return max(sum(1 for l in ls if MSG_RE_IOS.match(l)),
+               sum(1 for l in ls if MSG_RE_ANDROID.match(l)))
+
+
 def find_chat_file(folder):
-    for name in os.listdir(folder):
+    """El chat del export, con desempate.
+
+    Antes se devolvia el primero que os.listdir escupiera, sin ordenar. Si en
+    la carpeta habia otro .txt con "chat" en el nombre -un adjunto que alguien
+    mando por el grupo, o un archivo de una corrida anterior- podia ganarle a
+    _chat.txt y el inventario salia con CERO mensajes y sin un solo error."""
+    exacto, candidatos = None, []
+    for name in sorted(os.listdir(folder)):
         low = name.lower()
-        if low == "_chat.txt" or (low.endswith(".txt") and "chat" in low):
-            return os.path.join(folder, name)
-    return None
+        if not low.endswith(".txt"):
+            continue
+        p = os.path.join(folder, name)
+        if not os.path.isfile(p):
+            continue
+        if low == "_chat.txt":
+            exacto = p
+        elif "chat" in low:
+            candidatos.append(p)
+    if exacto:
+        return exacto
+    if not candidatos:
+        return None
+    # gana el que mas lineas de mensaje real tenga
+    return max(candidatos, key=_lineas_de_mensaje)
 
 
 def _attachments(text):
     text = normalizar(text)
-    found = ATTACH_RE.findall(text)
+    found = [a.strip() for a in ATTACH_RE.findall(text)]
     for line in text.split("\n"):
         m = ATTACH_RE_ANDROID.match(line.strip())
         if m:
@@ -214,40 +267,71 @@ def _attachments(text):
 
 
 def detect_format(raw):
-    """Devuelve ('ios'|'android', regex). Gana el que matchee mas lineas."""
+    """Devuelve ('ios'|'android', regex_mensaje, regex_sistema)."""
     raw = normalizar(raw)
     lines = raw.split("\n")[:400]
     n_ios = sum(1 for l in lines if MSG_RE_IOS.match(l))
     n_and = sum(1 for l in lines if MSG_RE_ANDROID.match(l))
     if n_and > n_ios:
-        return "android", MSG_RE_ANDROID
-    return "ios", MSG_RE_IOS
+        return "android", MSG_RE_ANDROID, SYS_RE_ANDROID
+    return "ios", MSG_RE_IOS, SYS_RE_IOS
+
+
+def detectar_orden(lines, MSG_RE):
+    """dia/mes o mes/dia. Un telefono en locale de EE.UU. escribe 5/20/26.
+
+    Sin esto, datetime(2026, 20, 5) tira ValueError, el ts queda en None y el
+    documento sale con la linea de tiempo entera sin fechas, en silencio."""
+    primeros, segundos = [], []
+    for l in lines[:400]:
+        m = MSG_RE.match(l)
+        if m:
+            primeros.append(int(m.group(1)))
+            segundos.append(int(m.group(2)))
+    if not primeros:
+        return "DMY"
+    # Un componente mayor que 12 no puede ser un mes: es el dia.
+    if max(segundos) > 12 and max(primeros) <= 12:
+        return "MDY"          # 5/20/26 -> mes/dia
+    return "DMY"              # el caso normal, y el desempate si hay dudas
+
+
+def _fecha(d, mo, y, hh, mm, ss, ampm, orden):
+    """Arma el timestamp respetando el orden dia/mes del export."""
+    y = int(y)
+    y += 2000 if y < 100 else 0
+    a, b = int(d), int(mo)
+    if orden == "MDY":
+        a, b = b, a          # venia mes/dia
+    hh = int(hh)
+    if ampm:
+        x = ampm.lower().replace(".", "").replace(" ", "")
+        if x.startswith("p") and hh < 12:
+            hh += 12
+        elif x.startswith("a") and hh == 12:
+            hh = 0
+    try:
+        return datetime(y, b, a, hh, int(mm), int(ss or 0))
+    except ValueError:
+        return None
 
 
 def parse_chat(path):
-    with open(path, encoding="utf-8", errors="replace") as f:
+    # utf-8-sig: si el .txt paso por Notepad o Excel queda con BOM, y sin
+    # esto el primer mensaje no matchea y se pierde sin aviso.
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
         raw = f.read().replace("\r\n", "\n").replace("\r", "\n")
 
-    fmt, MSG_RE = detect_format(raw)
-    messages = []
-    for line in normalizar(raw).split("\n"):
+    fmt, MSG_RE, SYS_RE = detect_format(raw)
+    lineas = normalizar(raw).split("\n")
+    orden = detectar_orden(lineas, MSG_RE)
+
+    messages, sistema = [], []
+    for line in lineas:
         m = MSG_RE.match(line)
         if m:
             d, mo, y, hh, mm, ss, ampm, sender, body = m.groups()
-            y = int(y)
-            y += 2000 if y < 100 else 0
-            hh = int(hh)
-            if ampm:
-                a = ampm.lower().replace(".", "").replace(" ", "")
-                if a.startswith("p") and hh < 12:
-                    hh += 12
-                elif a.startswith("a") and hh == 12:
-                    hh = 0
-            try:
-                ts = datetime(y, int(mo), int(d), hh, int(mm),
-                              int(ss or 0))
-            except ValueError:
-                ts = None
+            ts = _fecha(d, mo, y, hh, mm, ss, ampm, orden)
             messages.append({
                 "ts": ts.isoformat() if ts else None,
                 "_dt": ts,
@@ -258,12 +342,21 @@ def parse_chat(path):
                 "edited": "Se editó este mensaje" in body
                           or "This message was edited" in body,
             })
-        elif messages:
+            continue
+        ms = SYS_RE.match(line)
+        if ms:
+            d, mo, y, hh, mm, ss, ampm, body = ms.groups()
+            ts = _fecha(d, mo, y, hh, mm, ss, ampm, orden)
+            sistema.append({"ts": ts.isoformat() if ts else None,
+                            "texto": body.strip()})
+            continue
+        if messages:
             # continuacion de un mensaje multilinea
             messages[-1]["text"] += "\n" + line
             messages[-1]["attachments"] += _attachments(line)
             messages[-1]["urls"] += URL_RE.findall(line)
-    return messages, fmt
+    sin_fecha = sum(1 for m in messages if m["_dt"] is None)
+    return messages, fmt, sistema, orden, sin_fecha
 
 
 def main():
@@ -283,8 +376,14 @@ def main():
     if os.path.isfile(entrada) and entrada.lower().endswith(".zip"):
         folder = os.path.splitext(entrada)[0]
         os.makedirs(folder, exist_ok=True)
-        with zipfile.ZipFile(entrada) as z:
-            z.extractall(folder)
+        try:
+            with zipfile.ZipFile(entrada) as z:
+                z.extractall(folder)
+        except zipfile.BadZipFile:
+            print(f"ERROR: {os.path.basename(entrada)} no es un .zip valido.\n"
+                  "  Puede haberse cortado la descarga o la transferencia.\n"
+                  "  Volve a bajar el export del telefono.", file=sys.stderr)
+            return 1
         print(f"Descomprimido en {folder}")
         # exports que traen todo dentro de una subcarpeta unica
         hijos = [h for h in os.listdir(folder) if not h.startswith(".")]
@@ -324,7 +423,23 @@ def main():
     if chat_path is None:
         print("AVISO: no se encontro el .txt del chat en la carpeta.",
               file=sys.stderr)
-    messages, fmt = parse_chat(chat_path) if chat_path else ([], None)
+    if chat_path:
+        messages, fmt, sistema, orden, sin_fecha = parse_chat(chat_path)
+    else:
+        messages, fmt, sistema, orden, sin_fecha = [], None, [], None, 0
+
+    if orden == "MDY":
+        print("AVISO: el export viene en formato mes/dia (telefono en locale de\n"
+              "  EE.UU.). Se interpreto asi para armar las fechas.", file=sys.stderr)
+    if sin_fecha:
+        print(f"AVISO: {sin_fecha} de {len(messages)} mensajes quedaron SIN FECHA\n"
+              "  porque no se pudo interpretar el timestamp. La linea de tiempo\n"
+              "  va a estar incompleta: hay que decirlo en la nota metodologica.",
+              file=sys.stderr)
+    if chat_path and not messages:
+        print("AVISO: se encontro el .txt del chat pero no se pudo parsear ni un\n"
+              "  mensaje. Puede ser un formato de export no contemplado. NO se\n"
+              "  puede armar el documento con esto.", file=sys.stderr)
 
     # --- la puerta: un export sin archivos no se procesa ---
     omitidos = contar_omitidos(messages)
@@ -387,7 +502,10 @@ def main():
             "desde": dts[0].isoformat() if dts else None,
             "hasta": dts[-1].isoformat() if dts else None,
         },
+        "orden_fecha": orden,
+        "mensajes_sin_fecha": sin_fecha,
         "participantes": senders.most_common(),
+        "mensajes_de_sistema": sistema,
         "huecos_mayores_14_dias": gaps,
         "adjuntos_mencionados_ausentes": missing,
         "urls": sorted({u for m in messages for u in m["urls"]}),
@@ -404,7 +522,11 @@ def main():
 
     t = report["totales"]
     print(f"Carpeta: {folder}")
-    print(f"Chat: {report['chat_file']}  ({t['mensajes']} mensajes, formato {fmt})")
+    print(f"Chat: {report['chat_file']}  ({t['mensajes']} mensajes, formato {fmt}"
+          f"{', fechas mes/dia' if orden == 'MDY' else ''})")
+    if sistema:
+        print(f"Mensajes de sistema: {len(sistema)}  "
+              f"(el primero: {sistema[0]['texto'][:60]!r})")
     print(f"Rango: {report['rango']['desde']} -> {report['rango']['hasta']}")
     print(f"Archivos: {t['archivos']}  {t['por_tipo']}")
     print(f"Audio: {t['audio_segundos']} s   Video: {t['video_segundos']} s"

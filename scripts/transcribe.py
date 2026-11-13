@@ -36,7 +36,8 @@ import ffmpeg_tools  # noqa: E402
 
 import numpy as np
 
-CHUNK_SECONDS = 25   # Whisper trabaja en ventanas de 30 s; 25 deja margen
+CHUNK_SECONDS = 25     # Whisper trabaja en ventanas de 30 s; 25 deja margen
+OVERLAP_SECONDS = 2    # solape entre bloques, para no cortar palabras
 SR = 16000
 
 
@@ -48,11 +49,45 @@ def to_wav(src, workdir):
     base = os.path.splitext(os.path.basename(src))[0]
     dst = os.path.join(workdir, base + ".wav")
     if not os.path.exists(dst):
-        subprocess.run(
+        # Sin check=True a proposito: un adjunto truncado o de cero bytes es
+        # moneda corriente (WhatsApp solo exporta lo que sigue descargado en
+        # el telefono). Con check=True, UN archivo roto mataba toda la corrida
+        # con un traceback y se perdia todo lo transcripto hasta ahi.
+        r = subprocess.run(
             [exe, "-y", "-loglevel", "error", "-i", src,
              "-vn", "-ar", str(SR), "-ac", "1", dst],
-            check=True)
+            capture_output=True)
+        if r.returncode != 0 or not os.path.exists(dst) \
+                or os.path.getsize(dst) == 0:
+            return None
     return dst
+
+
+def unir(partes):
+    """Pega los bloques quitando lo que se repite por el solape.
+
+    Los bloques se solapan 2 s para no cortar palabras, asi que el final de
+    uno y el principio del siguiente dicen lo mismo. Sin esto, cada borde
+    deja una frase repetida en la transcripcion."""
+    def norm(w):
+        return "".join(c for c in w.lower() if c.isalnum())
+
+    acc = []
+    for parte in partes:
+        pal = parte.split()
+        if not pal:
+            continue
+        if acc:
+            # el solape mas largo entre la cola de acc y la cabeza de pal
+            maximo = min(len(acc), len(pal), 25)
+            corte = 0
+            for k in range(maximo, 1, -1):
+                if [norm(w) for w in acc[-k:]] == [norm(w) for w in pal[:k]]:
+                    corte = k
+                    break
+            pal = pal[corte:]
+        acc += pal
+    return " ".join(acc)
 
 
 def read_wave(path):
@@ -125,34 +160,61 @@ def main():
 
     workdir = os.path.join(os.path.dirname(os.path.abspath(paths[0])), "wav")
 
+    def guardar():
+        tmp = args.out + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(results, f, ensure_ascii=False, indent=1)
+        os.replace(tmp, args.out)   # atomico: nunca deja un json a medias
+
+    rotos = []
     for src in paths:
         name = os.path.basename(src)
         if name in results:
             print(f"### {name} (ya transcripto, se saltea)")
             continue
         wav = to_wav(src, workdir)
+        if wav is None:
+            rotos.append(name)
+            results[name] = {"duracion_s": None, "texto": None,
+                             "error": "archivo ilegible (vacio o truncado)"}
+            guardar()
+            print(f"### {name}  NO SE PUDO LEER: archivo vacio o truncado.")
+            print("    Va al documento como hueco declarado, no se omite.\n",
+                  flush=True)
+            continue
         samples = read_wave(wav)
         parts = []
-        step = CHUNK_SECONDS * SR
-        for i in range(0, len(samples), step):
-            seg = samples[i:i + step]
+        # Los bloques se solapan 2 s: cortar en seco cada 25 s se comia las
+        # palabras que caian justo en el borde, y en un audio de ocho minutos
+        # son casi veinte bordes.
+        step = (CHUNK_SECONDS - OVERLAP_SECONDS) * SR
+        ancho = CHUNK_SECONDS * SR
+        for i in range(0, max(len(samples), 1), step):
+            seg = samples[i:i + ancho]
             if len(seg) < SR // 10:
                 continue
             s = rec.create_stream()
             s.accept_waveform(SR, seg)
             rec.decode_stream(s)
             parts.append(s.result.text.strip())
-        text = " ".join(p for p in parts if p)
+        text = unir([p for p in parts if p])
         # la duracion sale del wav convertido, no del original: asi no
         # hace falta ffprobe, que el ffmpeg de pip no trae
         results[name] = {"duracion_s": duration(wav), "texto": text}
+        guardar()
         print(f"### {name}  ({results[name]['duracion_s']} s)")
         print(text)
         print(flush=True)
 
-    with open(args.out, "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=1)
-    print(f"--- {len(results)} transcripciones acumuladas en {args.out}")
+    guardar()
+    buenas = sum(1 for v in results.values() if v.get("texto"))
+    print(f"--- {buenas} transcripciones en {args.out}")
+    if rotos:
+        print(f"--- {len(rotos)} archivo{'' if len(rotos) == 1 else 's'} "
+              f"ilegible{'' if len(rotos) == 1 else 's'}, anotado"
+              f"{'' if len(rotos) == 1 else 's'} como hueco:")
+        for r in rotos:
+            print(f"      {r}")
     return 0
 
 
