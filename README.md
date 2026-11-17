@@ -24,6 +24,35 @@ pedís, él lo corre.
 
 ---
 
+## ⚠️ Antes que nada: dónde tiene que correr esto
+
+Es lo que más falla, y falla temprano: antes de procesar un solo audio.
+
+| | |
+|---|---|
+| **Aplicación de escritorio de Claude** (Cowork) | ✅ **Es lo que querés.** Corre en tu computadora: ve tu disco y el audio no sale de ahí |
+| Claude Code en tu terminal | ✅ Igual: corre en tu máquina |
+| El celular, o claude.ai en el navegador | ❌ **No** |
+
+**Por qué el celular no.** Desde el teléfono, Claude trabaja en una computadora
+prestada que se borra al terminar. Eso significa dos cosas: hay que bajar el
+motor de transcripción de 1 GB en cada sesión, y **tus audios viajan hasta esa
+computadora ajena** en lugar de quedarse en la tuya. Si en el grupo hay
+clientes o proveedores, eso solo ya alcanza para no hacerlo ahí.
+
+Y lo confuso: el celular y el navegador **igual ejecutan comandos** y devuelven
+algo con buena pinta — pero sin un solo audio transcripto, que es justo para lo
+que existe esto.
+
+Bajá la aplicación de escritorio de [claude.ai/download](https://claude.ai/download).
+Y si al crear la tarea te deja elegir dónde correr, elegí **en tu computadora**,
+no en la nube.
+
+> Si igual te equivocás, el skill lo detecta y **frena**: te lo dice en vez de
+> entregarte un documento al que le falta la mitad.
+
+---
+
 ## Qué te devuelve
 
 **Dos archivos.**
@@ -74,16 +103,11 @@ Tres pasos. No hace falta terminal.
 [claude.ai/download](https://claude.ai/download). Abrila, entrá en **Cowork** y
 dale acceso a esa carpeta.
 
-> **El Claude del navegador no sirve para esto**, y es el error más común.
-> Es fácil confundirse porque se llaman igual, así que conviene decirlo:
-> **Cowork es un modo de la aplicación de escritorio**, la que se baja de ese
-> link, y es la única que puede tocar archivos de tu disco.
+> **Cowork es un modo de la aplicación de escritorio**, no el claude.ai del
+> navegador. Es la distinción que más cuesta, y es razonable que cueste: se
+> llaman igual y se parecen.
 >
-> Lo confuso es que el Claude del navegador **igual ejecuta comandos** y te
-> devuelve un documento con buena pinta. Pero corre en un servidor, no en tu
-> computadora: ahí el motor de transcripción no se puede instalar y **los audios
-> no se transcriben**. Lo que te devuelve es el texto del chat ordenado, que es
-> justo lo que este proyecto existe para superar.
+> Ver arriba, [dónde tiene que correr esto](#️-antes-que-nada-dónde-tiene-que-correr-esto).
 >
 > La regla simple: **los archivos tienen que estar en tu disco y Claude tiene
 > que estar corriendo en tu máquina.**
@@ -169,9 +193,12 @@ ningún asistente escucha un `.opus` sin el motor local.
   —AirDrop, cable, Drive—, porque con adjuntos pesa megas, a veces cientos.
 - **Python 3.8 o más nuevo.** macOS y la mayoría de los Linux ya lo traen. En
   Windows: `winget install Python.Python.3.12`
+- **Una computadora.** Desde el celular no se puede: la app del teléfono corre
+  en la nube y ahí el motor de transcripción no se instala.
 - **Un asistente que pueda ejecutar scripts y leer archivos de tu máquina**:
-  Claude Cowork, Claude Code, o cualquier otro con esa capacidad. Pegando esto
-  en un chat web no funciona, porque ese chat no ve tu disco.
+  Claude Cowork en la aplicación de escritorio, Claude Code, o cualquier otro
+  con esa capacidad. Pegando esto en un chat web no funciona, porque ese chat
+  no ve tu disco.
 - **~1 GB de disco** para el modelo de transcripción, o ~110 MB con `tiny`.
 
 **ffmpeg no está en esta lista a propósito**: el instalador lo resuelve solo si

@@ -222,8 +222,10 @@ sentido gramatical. Revisarlo siempre.
 
 ## Ejemplo de entrada de línea de tiempo bien hecha
 
+*(el ejemplo es inventado; sirve para mostrar el formato)*
+
 ```markdown
-### 08/06/2026 — El número concreto: <monto>
+### 08/06/2026 — Aparece el primer número firme
 
 **13:21:00 — 🎙️ <Participante A> (audio, 84,3 s) — transcripción:**
 > "(…) lo estuvimos viendo y pudimos resolver **que vamos a poder poner hasta

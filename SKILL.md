@@ -52,15 +52,43 @@ puede prometer que se leyó todo cuando falta el principio.
 En un chat de dos personas no hay aviso de creación y el estado es
 `no_se_puede_saber`: ahí no hay nada que decir.
 
-**2. ¿Esto corre en la máquina de la persona?**
-El motor de transcripción se instala y corre localmente. Si el entorno no puede
-instalar desde PyPI —error 403, "host not in allowlist", sin salida a internet—
-casi siempre significa que **esto se está ejecutando en un servidor y no en la
-computadora de la persona**. Frenar y decírselo con estas palabras:
+**2. ¿Hay salida a internet, y de quién es la máquina?**
 
-> Esto se está ejecutando en la nube, no en tu computadora, y desde acá no puedo
-> instalar el motor que transcribe los audios. Abrí la aplicación de escritorio,
-> dale acceso a la carpeta donde está el export, y pedímelo de nuevo desde ahí.
+Son **dos preguntas distintas** y conviene no confundirlas. El motor se baja de
+PyPI y de GitHub, así que sin internet no hay transcripción, corra donde corra.
+Y hay entornos en la nube **con** internet, donde el motor se instala y
+transcribe perfecto: lo que cambia ahí no es si funciona, es de quién es la
+computadora por la que pasa el audio.
+
+Si `pip` falla con 403, "host not in allowlist" o "Name or service not known",
+el diagnóstico correcto es **"este entorno no tiene salida a internet"**, no
+"estás en un servidor". Frenar y decírselo con estas palabras:
+
+> Desde acá no puedo bajar el motor que transcribe los audios: este entorno no
+> tiene salida a internet.
+>
+> **Si los archivos están en tu computadora**, ese es el mejor lugar para
+> hacerlo: abrí la aplicación de escritorio de Claude, entrá en Cowork, dale
+> acceso a la carpeta del export y pedímelo de nuevo desde ahí. Si te deja
+> elegir dónde correr la tarea, elegí **en tu computadora**. Así el audio no
+> sale de tu máquina.
+>
+> **Si estás en el celular**, no hay una app de escritorio que abrir: desde el
+> teléfono yo trabajo en una computadora prestada que se borra al terminar. Eso
+> significa bajar el motor de 1 GB en cada sesión, y que tus audios viajen
+> hasta esa computadora ajena en lugar de quedarse en la tuya. Si el grupo
+> tiene cosas de clientes, conviene hacerlo desde una computadora.
+
+**Dos reglas al dar ese mensaje.**
+
+**Nombrar el caso del teléfono.** Decir solo "abrí la aplicación de escritorio"
+a alguien que está en el celular es pedirle algo que desde ahí no existe, sin
+avisarle que necesita cambiar de aparato.
+
+**No decir que la nube no puede.** Puede, cuando tiene internet. Lo que cambia
+es de quién es la máquina por la que pasa el audio, y eso se dice como lo que
+es —una decisión de la persona sobre sus datos— y no como una limitación
+técnica inventada.
 
 No ofrecer procesar "todo lo demás igual" como si fuera una alternativa
 razonable. Sin los audios, el resultado es un volcado del chat: exactamente lo

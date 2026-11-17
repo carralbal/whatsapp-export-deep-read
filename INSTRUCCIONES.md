@@ -8,10 +8,21 @@ Gemini, Copilot, o el que uses.
 de tu proyecto o en el primer mensaje de la conversación, y después pasale la
 carpeta del export.
 
-**Requisito:** el asistente tiene que poder ejecutar los scripts en tu máquina
-y leer los archivos de una carpeta. Si tu asistente solo lee archivos que le
-subís uno por uno, corré los scripts vos a mano (ver `README.md`) y pasale el
-`.md` resultante.
+**Requisito:** el asistente tiene que poder ejecutar los scripts **en tu
+computadora** y leer los archivos de una carpeta. Si tu asistente solo lee
+archivos que le subís uno por uno, corré los scripts vos a mano (ver
+`README.md`) y pasale el `.md` resultante.
+
+**Sin internet no hay transcripción, corra donde corra.** Si al arrancar los
+scripts aparece un error de red —`Name or service not known`, `host not in
+allowlist`, un 403 de pip—, **frenar y decirlo**, no seguir sin los audios.
+
+**Y conviene hacerlo en la computadora de la persona.** Desde el celular el
+asistente trabaja en una máquina prestada que se borra al terminar: hay que
+bajar el motor de 1 GB cada vez, y el audio del grupo viaja hasta esa máquina
+ajena en lugar de quedarse en la propia. No es que no pueda funcionar —con
+internet funciona—: es que el audio deja de ser privado, y eso lo decide la
+persona, no el asistente.
 
 ---
 
