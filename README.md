@@ -122,7 +122,17 @@ Homebrew, ni winget, ni permisos de administrador.
 
 Cuando termine, pedile que lea tu export:
 
-> Leé este export de WhatsApp: `/ruta/al/export.zip`
+> Con el skill `whatsapp-export-deep-read`, leé completo el export que está en
+> Descargas.
+
+No hace falta mover el zip de lugar ni descomprimirlo, y tampoco escribir la
+ruta entera: alcanza con decirle en qué carpeta está, siempre que sea una a la
+que le diste acceso.
+
+> **¿Por qué nombrar el skill?** Si quedó bien instalado, el asistente lo usa
+> solo, aunque le pidas "leé este chat y contame todo". Nombrarlo saca la duda:
+> sirve igual si quedó como una carpeta y no como un skill registrado, y es lo
+> que hay que hacer sí o sí en los asistentes que no tienen skills.
 
 Te devuelve los dos archivos. Empezá por el que dice **resumen**.
 
